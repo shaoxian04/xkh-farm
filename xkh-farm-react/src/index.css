@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #2E7D32;
+  --color-accent: #F9A825;
+  --color-bg: #F1F8E9;
+  --color-text: #1B5E20;
+
+  --font-sans: Inter, sans-serif;
+  --font-serif: Merriweather, serif;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif font-bold;
+  }
+}
+
+.glass-card {
+  @apply bg-white/80 backdrop-blur-md shadow-lg rounded-xl border border-white/20;
+}
