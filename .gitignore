@@ -1,0 +1,9 @@
+# Source footage for the site's video. Kept out of git deliberately: ~64MB,
+# one file is past GitHub's 50MB warning threshold, and git stores no delta for
+# video, so each re-encode would add a full copy to history permanently.
+# Keep these in the project's own storage; regenerate the shipped files with
+# xkh-farm-react/scripts/build-video.sh.
+materials/
+
+# Playwright MCP scratch output
+.playwright-mcp/
