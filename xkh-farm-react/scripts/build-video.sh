@@ -14,6 +14,12 @@
 #         17.4-18.8s (tomatoes going into the crate) and 21.8-27.7s
 #         (harvesting). The opening aerial is not usable: the logo draws
 #         itself on across 0-3.4s and the title holds until about 6.3s.
+#       * FAST CUTTING. This is a promo, edited to hold attention on its own,
+#         and the harvest run alone cuts four times in 5.9 seconds. Behind
+#         static hero copy that reads as a flicker - people take it for the
+#         video being sped up. Shot boundaries, from `select='gt(scene,0.25)'`:
+#           21.80 cabbage | 23.10 chives | 24.03 greens | 25.83 onions | 27.70
+#           17.40 crate   | 18.40 (cut)  | 18.80
 #       * A STANDING WATERMARK of the logo in the top-left corner, on almost
 #         every frame, roughly x=30..175, y=15..145. Cropping from x=200 is
 #         what removes it, at the cost of 200px of width.
@@ -35,15 +41,25 @@ if [ ! -f "$SRC/xkh-video.mp4" ]; then
   exit 1
 fi
 
-echo "hero loop (caption-free windows, watermark cropped off, 1080x720)"
-# 7.3s: the harvest run first, then the crate. There is no scale step - the
-# crop is the only resize, so what ships is source pixels rather than a
-# resampled copy of them.
+echo "hero loop (two longest shots, eased to 0.63x, watermark cropped off)"
+# Only the two longest continuous shots are used - greens+onions (24.03-27.70)
+# and the crate (17.40-18.40) - so the loop carries three cuts in 7.3s rather
+# than six. They are then eased to 0.63x, which lets each shot hold for about
+# three seconds instead of one and a half.
+#
+# minterpolate does the slowdown by synthesising frames, not by repeating them:
+# straight setpts would give 30fps carrying 19 distinct frames a second, which
+# judders. Check it with `ffmpeg -i hero.mp4 -vf mpdecimate -f null -`; every
+# frame should survive. It is the slow step in this script, around 40s.
 ffmpeg -v error -y -i "$SRC/xkh-video.mp4" -filter_complex \
-  "[0:v]trim=21.8:27.7,setpts=PTS-STARTPTS,crop=1080:720:200:0[a];\
-   [0:v]trim=17.4:18.8,setpts=PTS-STARTPTS,crop=1080:720:200:0[b];\
+  "[0:v]trim=24.03:27.70,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
+minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
+setpts=1.6*PTS[a];\
+   [0:v]trim=17.40:18.40,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
+minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
+setpts=1.6*PTS[b];\
    [a][b]concat=n=2:v=1[v]" \
-  -map "[v]" -an -c:v libx264 -crf 26 -preset veryslow \
+  -map "[v]" -an -r 30 -c:v libx264 -crf 26 -preset slow \
   -maxrate 2600k -bufsize 5200k -movflags +faststart -pix_fmt yuv420p \
   "$OUT/hero.mp4"
 
