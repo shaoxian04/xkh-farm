@@ -8,6 +8,7 @@ export default function Home() {
       <Hero />
       <CropWall />
       <Story />
+      <Commitment />
       <Film />
       <Enquiry />
     </>
@@ -144,6 +145,77 @@ function Story() {
             className="aspect-[5/4] w-full object-cover lg:sticky lg:top-28"
           />
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Why the farm exists, in the owner's own terms: customers should be able to
+ * eat vegetables that are fresh, healthy, free of chemicals and safe — and the
+ * premium lines besides.
+ *
+ * Deliberately not four identical icon cards. The four commitments are the
+ * things a wholesale buyer actually judges a supplier on, so they are set as
+ * what they are — a list of terms and what each one means — against the
+ * statement they all serve.
+ */
+function Commitment() {
+  return (
+    <section className="band bg-forest" aria-labelledby="commitment">
+      <div className="wrap grid gap-14 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-5">
+          <h2
+            id="commitment"
+            className="max-w-[16ch] text-[clamp(2.25rem,5.5vw,4rem)]"
+          >
+            Vegetables you can serve without a second thought.
+          </h2>
+
+          <p className="mt-8 max-w-md text-lg text-bone/85">
+            Mr Tan started the farm so that families could eat vegetables they
+            never had to worry about: fresh, healthy, grown without chemicals,
+            and held to a premium standard. Two decades on, that is still the
+            only standard the farm packs to.
+          </p>
+
+                    {/* sage lands at 3.73:1 on forest, so the owner's own line is
+              set in bone instead — see npm run check:contrast. */}
+<p className="han mt-5 max-w-md text-lg leading-relaxed text-bone/75">
+            让客户吃到新鲜、健康、无化学的安心蔬菜。
+          </p>
+        </div>
+
+        <dl className="lg:col-span-7">
+          {[
+            [
+              "Fresh from the highlands",
+              "Cut in Bertam Valley and packed on the farm, so a crate is moving towards your market the same day rather than sitting in storage.",
+            ],
+            [
+              "Grown without chemicals",
+              "Nothing goes onto the crop that the family would not want on their own table. That is the farm's own standard, and it applies to every line it sells.",
+            ],
+            [
+              "The same quality in every crate",
+              "Thirty-six lines, graded and packed to one specification, so a repeat order arrives looking like the last one.",
+            ],
+            [
+              "Handled clean, start to finish",
+              "Washed, sorted and crated under the farm's own hygiene routine before anything is loaded onto the lorry.",
+            ],
+          ].map(([term, meaning]) => (
+            <div
+              key={term}
+              className="grid gap-2 border-t border-bone/20 py-6 first:border-t-0 first:pt-0 md:grid-cols-[minmax(0,16rem)_1fr] md:gap-8"
+            >
+              <dt className="subhead text-xl text-bone">{term}</dt>
+              <dd className="max-w-prose text-bone/80">{meaning}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );

@@ -20,6 +20,7 @@ Showcasing fresh vegetables, company ethos, and contact details to potential cli
 - [x] Crop filtering + bilingual search
 - [x] Accessibility pass (AA contrast, focus, reduced motion)
 - [x] Redesign: dark highland ground, keyed-out produce, crop wall - see DESIGN.md
+- [x] Owner's vision and mission section (Fraunces/Archivo type, "Commitment")
 - [ ] Confirm the wholesale claims below
 
 ## Facts taken from the farm's own film
@@ -33,6 +34,24 @@ from - they are the farm's own words, not invented:
 - "A Wide Variety of Fresh Vegetables"
 - "Quality Produce. Delivered Fresh."
 
+## The owner's vision and mission
+
+Given by the owner, in Chinese:
+
+> 我们的 vision 还有 mission 让客户吃到新鲜健康有机无化学安心的蔬菜还有其他的 premium 菜
+
+The `Commitment` section on the home page is built from this. Two notes on how
+it was worded:
+
+- He said 有机 ("organic"). **The site does not use the word "organic"**, because
+  in Malaysia that is a certification term (myOrganic) and claiming it without
+  the certificate is a regulatory problem, not a copy problem. The page says
+  "grown without chemicals" instead, which is what 无化学 means and which is his
+  claim to make. If the farm does hold myOrganic certification, say so and the
+  wording can change.
+- 安心 has no clean English equivalent; the headline "Vegetables you can serve
+  without a second thought" is carrying it.
+
 ## Copy to confirm
 
 These were written to fit the positioning and should be checked by the farm
@@ -42,6 +61,11 @@ before launch:
 - Same-day dispatch and field-cooling for leafy lines
 - Hand-grading at the packhouse
 - The per-crop handling notes in `src/data/products.js`
+- All four commitments in the `Commitment` section, which describe operations
+  nobody has confirmed to me: same-day movement out of Bertam Valley, grading
+  to one specification across all 36 lines, and a washing/sorting/crating
+  hygiene routine. They are plausible for a farm of this size and they match
+  the owner's four themes, but he should read them line by line.
 
 ## Known asset limitations
 
