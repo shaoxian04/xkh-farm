@@ -81,7 +81,7 @@ function Hero() {
             ["36", "Vegetable lines"],
             // A place, not a figure — set smaller so it reads as a name
             // rather than pretending to be another statistic.
-            ["Cameron Highlands", "Bertam Valley, Pahang", "text-xl md:text-2xl"],
+            ["Cameron Highlands", "Pahang", "text-xl md:text-2xl"],
           ].map(([value, label, size]) => (
             <div key={label}>
               <dt className="sr-only">{label}</dt>
@@ -215,7 +215,7 @@ function useReveal() {
 const PLEDGES = [
   {
     term: "Fresh from the highlands",
-    text: "Cut in Bertam Valley and packed on the farm, so a crate is on its way to your market the same day.",
+    text: "Cut in Cameron Highlands and packed on the farm, so a crate is on its way to your market the same day.",
     img: "/img/farm/field.webp",
     alt: "Rows of lettuce growing in the farm's highland beds.",
   },
