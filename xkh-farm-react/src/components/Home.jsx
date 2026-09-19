@@ -71,19 +71,20 @@ function Hero() {
           </Link>
         </div>
 
-        <dl className="mt-14 grid max-w-3xl grid-cols-2 gap-x-8 gap-y-6 border-t border-bone/15 pt-8 sm:grid-cols-4">
+        {/* items-end so the labels sit on one line even though the place
+            name runs longer than the figures. */}
+        <dl className="mt-14 grid max-w-3xl grid-cols-2 items-end gap-x-8 gap-y-6 border-t border-bone/15 pt-8 sm:grid-cols-4">
           {[
             ["2005", "Growing since"],
             ["20 yrs", "Farming experience"],
             ["36", "Vegetable lines"],
-            ["Pahang", "Bertam Valley"],
-          ].map(([value, label]) => (
+            // A place, not a figure — set smaller so it reads as a name
+            // rather than pretending to be another statistic.
+            ["Cameron Highlands", "Bertam Valley, Pahang", "text-xl md:text-2xl"],
+          ].map(([value, label, size]) => (
             <div key={label}>
               <dt className="sr-only">{label}</dt>
-              <dd
-                className="font-display text-3xl font-extrabold md:text-4xl"
-                style={{ fontVariationSettings: '"wdth" 82' }}
-              >
+              <dd className={`disp-lg ${size ?? "text-3xl md:text-4xl"}`}>
                 {value}
               </dd>
               <p className="mt-1 text-sm text-sage">{label}</p>
