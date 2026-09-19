@@ -20,9 +20,12 @@ export default function Home() {
 function Hero() {
   return (
     <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden">
-      {/* Only the text-free windows of the farm film are used here — the rest
-          of the reel carries its own burned-in titles. Encoded at its native
-          1280x720 and never upscaled past that by the gradient treatment. */}
+      {/* The farm's film carries its own burned-in titles through most of its
+          length AND a standing logo watermark in the top-left corner, so this
+          loop is cut from the only two caption-free windows and cropped in
+          from the left to lose the watermark — a second XKH mark in shot,
+          under the page's own lockup, reads as a mistake. Hence 1080x720
+          rather than the full 1280. See scripts/build-video.sh. */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/video/hero.mp4"
@@ -375,7 +378,7 @@ function Film() {
               ref={ref}
               className="mx-auto block aspect-video w-full max-w-[1280px]"
               src="/video/film.mp4"
-              poster="/video/hero-poster.webp"
+              poster="/video/film-poster.webp"
               controls
               playsInline
               preload="none"
@@ -387,7 +390,7 @@ function Film() {
               className="group relative mx-auto block aspect-video w-full max-w-[1280px] overflow-hidden"
             >
               <img
-                src="/video/hero-poster.webp"
+                src="/video/film-poster.webp"
                 alt=""
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"

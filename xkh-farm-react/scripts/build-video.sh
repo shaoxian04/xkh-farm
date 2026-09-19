@@ -8,9 +8,17 @@
 #
 # Source notes that drive the trims:
 #   - xkh-video.mp4 is HEVC, which Chrome and Firefox will not play, and 720p.
-#     It is a finished promo with BURNED-IN TITLES, so only its text-free
-#     windows can be used behind page copy: 0-3.4s (aerial) and 22.2-28.2s
-#     (harvest). Everything between carries the farm's own captions.
+#     It is a finished promo and it carries the farm's own marks twice over:
+#       * BURNED-IN TITLES through most of its 35s. Mapped off a 2fps contact
+#         sheet, the only caption-free runs long enough to use are
+#         17.4-18.8s (tomatoes going into the crate) and 21.8-27.7s
+#         (harvesting). The opening aerial is not usable: the logo draws
+#         itself on across 0-3.4s and the title holds until about 6.3s.
+#       * A STANDING WATERMARK of the logo in the top-left corner, on almost
+#         every frame, roughly x=30..175, y=15..145. Cropping from x=200 is
+#         what removes it, at the cost of 200px of width.
+#     Both matter for the hero, which sits directly under the page's own logo
+#     lockup - a second XKH mark in shot reads as a mistake.
 #   - "logo animation 2.mp4" is 1080p and draws the logo on between ~1.1s and
 #     ~7.3s; the intro takes that span at double speed.
 #
@@ -27,10 +35,13 @@ if [ ! -f "$SRC/xkh-video.mp4" ]; then
   exit 1
 fi
 
-echo "hero loop (text-free windows only, native 1280x720)"
+echo "hero loop (caption-free windows, watermark cropped off, 1080x720)"
+# 7.3s: the harvest run first, then the crate. There is no scale step - the
+# crop is the only resize, so what ships is source pixels rather than a
+# resampled copy of them.
 ffmpeg -v error -y -i "$SRC/xkh-video.mp4" -filter_complex \
-  "[0:v]trim=0:3.4,setpts=PTS-STARTPTS,scale=1280:720[a];\
-   [0:v]trim=22.2:28.2,setpts=PTS-STARTPTS,scale=1280:720[b];\
+  "[0:v]trim=21.8:27.7,setpts=PTS-STARTPTS,crop=1080:720:200:0[a];\
+   [0:v]trim=17.4:18.8,setpts=PTS-STARTPTS,crop=1080:720:200:0[b];\
    [a][b]concat=n=2:v=1[v]" \
   -map "[v]" -an -c:v libx264 -crf 26 -preset veryslow \
   -maxrate 2600k -bufsize 5200k -movflags +faststart -pix_fmt yuv420p \
@@ -67,6 +78,12 @@ echo "posters"
 ffmpeg -v error -y -ss 0.6 -i "$OUT/hero.mp4" -vframes 1 -q:v 2 "$OUT/.hero.jpg"
 ffmpeg -v error -y -i "$OUT/.hero.jpg" -quality 80 "$OUT/hero-poster.webp"
 rm -f "$OUT/.hero.jpg"
+
+# The film keeps its own 16:9 poster. The hero's is 3:2 since the crop, and a
+# 3:2 poster in a 16:9 <video> pillarboxes for the moment before playback.
+ffmpeg -v error -y -ss 22.4 -i "$OUT/film.mp4" -vframes 1 -q:v 2 "$OUT/.film.jpg"
+ffmpeg -v error -y -i "$OUT/.film.jpg" -quality 80 "$OUT/film-poster.webp"
+rm -f "$OUT/.film.jpg"
 
 echo
 ls -la "$OUT"
