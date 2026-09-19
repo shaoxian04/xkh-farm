@@ -145,3 +145,29 @@ Source video was HEVC, unplayable in Chrome and Firefox, and 52MB.
   re-trigger lazy loading, so they would stay blank.
 - Keep `padding-inline` and `padding-block` separate on `.wrap` / `.band`; a
   padding shorthand on the container silently zeroes the section rhythm.
+
+## Caching
+
+Two policies, in `xkh-farm-react/vercel.json`.
+
+Everything under `/assets/` is emitted by Vite with a content hash in the
+filename, so the URL changes whenever the bytes do. Those are immutable for a
+year.
+
+Everything under `/video/`, `/img/` and `/brand/` keeps a **fixed filename
+across rebuilds** - `hero.mp4` is always `hero.mp4`. That means the only thing
+telling a browser its copy is out of date is the cache header, so those are
+`max-age=0, must-revalidate`: the browser asks every time and the CDN answers
+304 when nothing changed, which costs a round trip rather than a re-download.
+
+This was originally `max-age=86400, must-revalidate`, which is a trap.
+`must-revalidate` does not mean "revalidate every time" - it only governs what
+happens once a response has gone *stale*. While still fresh, the browser
+serves from cache without asking. So a rebuilt `hero.mp4` kept showing the old
+one for up to 24 hours, on the same URL, with the right file sitting on the
+server.
+
+If these files ever get big enough that the round trip matters, the fix is to
+fingerprint them rather than to lengthen the max-age: move them into `src/`
+and `import` them so Vite hashes the names, and they can then be immutable
+like everything else.
