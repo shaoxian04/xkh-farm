@@ -47,18 +47,11 @@ ffmpeg -v error -y -i "$SRC/logo animation 2.mp4" -filter_complex \
   -map "[v]" -an -c:v libx264 -crf 20 -preset slow \
   -movflags +faststart -pix_fmt yuv420p "$OUT/intro.mp4"
 
-echo "full-length logo sting for the footer"
-ffmpeg -v error -y -i "$SRC/logo animation 2.mp4" -an -vf "scale=1440:-2" \
-  -c:v libx264 -crf 21 -preset slow -movflags +faststart -pix_fmt yuv420p \
-  "$OUT/logo.mp4"
 
 echo "posters"
 ffmpeg -v error -y -ss 0.6 -i "$OUT/hero.mp4" -vframes 1 -q:v 2 "$OUT/.hero.jpg"
 ffmpeg -v error -y -i "$OUT/.hero.jpg" -quality 80 "$OUT/hero-poster.webp"
-ffmpeg -v error -y -ss 7.2 -i "$SRC/logo animation 2.mp4" -vframes 1 \
-  -vf "scale=1440:-2" -q:v 2 "$OUT/.logo.jpg"
-ffmpeg -v error -y -i "$OUT/.logo.jpg" -quality 82 "$OUT/logo-poster.webp"
-rm -f "$OUT/.hero.jpg" "$OUT/.logo.jpg"
+rm -f "$OUT/.hero.jpg"
 
 echo
 ls -la "$OUT"
