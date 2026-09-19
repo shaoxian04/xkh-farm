@@ -48,6 +48,21 @@ ffmpeg -v error -y -i "$SRC/logo animation 2.mp4" -filter_complex \
   -movflags +faststart -pix_fmt yuv420p "$OUT/intro.mp4"
 
 
+echo "farm stills for the commitments section"
+# Four frames from text-free moments of the promo, one per promise. The film
+# is 1280x720 and carries a small XKH watermark in the top-left corner, so
+# every frame is cropped to 960x720 from x=240, which drops the watermark and
+# keeps the subject. Timestamps were chosen off a 1fps contact sheet; the
+# farm's own burned-in captions rule out everything else.
+mkdir -p public/img/farm
+still() {  # still <seconds> <name>
+  ffmpeg -v error -y -ss "$1" -i "$SRC/xkh-video.mp4" -frames:v 1     -vf "crop=960:720:240:0" -quality 78 "public/img/farm/$2.webp"
+}
+still 13.60 field    # rows of lettuce in the highland beds
+still 22.40 harvest  # a worker cutting a cabbage by hand
+still 17.80 crate    # gloved hands lifting cherry tomatoes from a crate
+still 26.60 bundle   # a worker bundling spring onions
+
 echo "posters"
 ffmpeg -v error -y -ss 0.6 -i "$OUT/hero.mp4" -vframes 1 -q:v 2 "$OUT/.hero.jpg"
 ffmpeg -v error -y -i "$OUT/.hero.jpg" -quality 80 "$OUT/hero-poster.webp"
