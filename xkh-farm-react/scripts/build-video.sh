@@ -20,6 +20,14 @@
 #         video being sped up. Shot boundaries, from `select='gt(scene,0.25)'`:
 #           21.80 cabbage | 23.10 chives | 24.03 greens | 25.83 onions | 27.70
 #           17.40 crate   | 18.40 (cut)  | 18.80
+#
+#     The hero now runs the film WHOLE, at the owner's decision, with those
+#     costs accepted. The history is kept above because it is the argument
+#     against, and because a caption-free re-cut is one edit away if the view
+#     changes. Neither mark can be removed once the film plays whole:
+#     cropping the watermark slices the left edge from two captions (they
+#     start at x=43 and x=53), and delogo leaves a smeared rectangle that
+#     reads worse than the mark does.
 #       * A STANDING WATERMARK of the logo in the top-left corner, on almost
 #         every frame, roughly x=30..175, y=15..145. Cropping from x=200 is
 #         what removes it, at the cost of 200px of width.
@@ -41,38 +49,17 @@ if [ ! -f "$SRC/xkh-video.mp4" ]; then
   exit 1
 fi
 
-echo "hero loop (every usable shot, eased to 0.63x, watermark cropped off)"
-# Everything in the film that is caption-free and long enough to hold, which
-# is 21% of it:
-#     21.80-23.10  cabbage      1.30s
-#     24.03-27.70  greens, then onions (one cut at 25.83)
-#     17.40-18.40  the crate
-# Skipped on purpose: the chives shot at 23.10-24.03 is 0.93s, short enough
-# to read as a flicker next to the others, and the three clean aerials at
-# 6.30, 9.60 and 13.60 are 0.55s, 0.30s and 0.45s - no amount of easing
-# rescues those.
+echo "hero background (the whole film, leaner than the click-to-play copy)"
+# Same 35.4s as film.mp4, encoded harder because it downloads on every visit
+# whether or not anyone wants it: crf 32 capped at 1500k gives ~4.6MB against
+# the 7.1MB of film.mp4. Full 1280x720 with no crop - see the note above.
 #
-# Eased to 0.63x so each shot holds around three seconds rather than one and
-# a half: the promo is cut to hold attention on its own, and at full speed
-# behind static hero copy that rhythm reads as the video being sped up.
-#
-# minterpolate does the slowdown by synthesising frames, not by repeating
-# them; straight setpts would give 30fps carrying 19 distinct frames a second,
-# which judders. Check with `ffmpeg -i hero.mp4 -vf mpdecimate -f null -` -
-# nearly every frame should survive. It is the slow step here, around 50s.
-ffmpeg -v error -y -i "$SRC/xkh-video.mp4" -filter_complex \
-  "[0:v]trim=21.80:23.10,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
-minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
-setpts=1.6*PTS[a];\
-   [0:v]trim=24.03:27.70,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
-minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
-setpts=1.6*PTS[b];\
-   [0:v]trim=17.40:18.40,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
-minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
-setpts=1.6*PTS[c];\
-   [a][b][c]concat=n=3:v=1[v]" \
-  -map "[v]" -an -r 30 -c:v libx264 -crf 26 -preset slow \
-  -maxrate 2600k -bufsize 5200k -movflags +faststart -pix_fmt yuv420p \
+# The hero's scrim in Home.jsx is tuned to this: the last 7.7s are a cream end
+# card, so the overlay has to hold light text against a LIGHT frame as well as
+# a dark one. If you re-cut this, re-check it against the end card.
+ffmpeg -v error -y -i "$SRC/xkh-video.mp4" -an -vf "scale=1280:720" \
+  -c:v libx264 -crf 32 -preset veryslow \
+  -maxrate 1500k -bufsize 3000k -movflags +faststart -pix_fmt yuv420p \
   "$OUT/hero.mp4"
 
 echo "full promo film (their own titles; loaded only on click)"
@@ -103,7 +90,8 @@ still 17.80 crate    # gloved hands lifting cherry tomatoes from a crate
 still 26.60 bundle   # a worker bundling spring onions
 
 echo "posters"
-ffmpeg -v error -y -ss 0.6 -i "$OUT/hero.mp4" -vframes 1 -q:v 2 "$OUT/.hero.jpg"
+# 22.4s, not the opening - the film starts on its own logo animation.
+ffmpeg -v error -y -ss 22.4 -i "$OUT/hero.mp4" -vframes 1 -q:v 2 "$OUT/.hero.jpg"
 ffmpeg -v error -y -i "$OUT/.hero.jpg" -quality 80 "$OUT/hero-poster.webp"
 rm -f "$OUT/.hero.jpg"
 

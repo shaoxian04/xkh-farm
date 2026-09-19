@@ -20,12 +20,19 @@ export default function Home() {
 function Hero() {
   return (
     <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden">
-      {/* The farm's film carries its own burned-in titles through most of its
-          length AND a standing logo watermark in the top-left corner, so this
-          loop is cut from the only two caption-free windows and cropped in
-          from the left to lose the watermark — a second XKH mark in shot,
-          under the page's own lockup, reads as a mistake. Hence 1080x720
-          rather than the full 1280. See scripts/build-video.sh. */}
+      {/* The farm's whole film, uncut, at the owner's request.
+          Two consequences worth knowing before editing this.
+
+          Its burned-in titles cross the copy below, and the last 7.7s are a
+          cream end card that takes the whole frame pale, so the scrim has to
+          hold text against a LIGHT background as well as a dark one — hence
+          to-night/45 rather than /35, and the separate top scrim that keeps
+          the nav legible while the header is still transparent. Verified by
+          sampling rendered pixels over the end card, not by eye.
+
+          The corner watermark stays. Cropping it off would slice the left
+          edge from two of the captions, which start at x=43 and x=53, and
+          delogo leaves a smeared rectangle that is worse than the mark. */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/video/hero.mp4"
@@ -39,7 +46,11 @@ function Hero() {
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-night via-night/80 to-night/35"
+        className="absolute inset-0 bg-gradient-to-t from-night via-night/80 to-night/45"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-52 bg-gradient-to-b from-night/80 to-transparent"
       />
 
       <div className="wrap relative pb-16 pt-28 md:pb-24">

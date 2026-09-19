@@ -73,6 +73,15 @@ One orchestrated moment and one piece of ambient motion. That is the budget.
   is not keyed to the route. Dismissible by click, key or scroll, with a 5.2s
   failsafe, and skipped entirely under reduced motion. The clip is 600kB, which
   is what makes running it every time affordable.
+- **The hero film**: the farm's whole 35.4s promo, muted and looping. It is
+  the film as the farm made it, titles and end card included, which is the
+  owner's call - the alternative, a re-cut of only the caption-free windows,
+  is recorded in `scripts/build-video.sh` if the view changes. The overlay is
+  tuned to it: the last 7.7s are a cream end card, so the scrim has to hold
+  light text against a light frame, which is why the top stop is `night/45`
+  and the header has a scrim of its own. Measured over that frame: nav 8.4:1,
+  headline 6.5:1, paragraph 8.6:1, stat labels 6.5:1.
+
 - **The crop wall** (`CropWall.jsx`): three rows of the 36 crops scrolling in
   alternating directions. It carries content, since the range is the sales
   argument for a wholesaler, so the motion is doing work. Pauses on hover and

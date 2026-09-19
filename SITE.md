@@ -81,3 +81,15 @@ before launch:
   remove it. Reshoot on a plain surface if it bothers you.
 - The farm film is 720p, so it is used at its native width and never stretched
   full-bleed beyond it.
+- The film carries the farm's own marks twice: burned-in titles across 12.5s of
+  its 35.4s, and a standing logo watermark in the top-left corner of nearly
+  every frame. With the film playing whole in the hero, neither can be removed
+  - cropping the watermark slices the left edge from two captions, and delogo
+  leaves a smeared rectangle that reads worse than the mark. **A copy of the
+  footage without the titles would fix this, and would also make the aerials
+  usable.** They are the only shots that show the scale of the place, and all
+  three caption-free runs of aerial are under 0.6s. Worth asking whoever cut
+  the promo.
+- The hero and the "Watch the film" section now carry the same 35.4s, and
+  film.mp4 has no audio track, so the section adds controls and nothing else.
+  It is a candidate for removal, which would also drop 7.1MB from the repo.
