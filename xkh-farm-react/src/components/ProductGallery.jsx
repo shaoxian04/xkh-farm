@@ -93,7 +93,7 @@ export default function ProductGallery() {
 
       <section className="wrap pb-24 pt-10">
         {results.length === 0 ? (
-          <p className="py-24 text-center font-display text-3xl font-bold text-bone/50">
+          <p className="disp py-24 text-center text-3xl text-bone/50">
             No crop matches that search.
           </p>
         ) : (
@@ -113,8 +113,7 @@ export default function ProductGallery() {
                 </div>
                 <div className="mt-3.5 flex items-baseline justify-between gap-3">
                   <h2
-                    className="font-display text-lg font-bold"
-                    style={{ fontVariationSettings: '"wdth" 92' }}
+                    className="subhead text-lg"
                   >
                     {p.name}
                   </h2>

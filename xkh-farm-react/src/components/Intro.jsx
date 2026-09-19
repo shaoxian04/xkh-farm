@@ -1,38 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 
-const SEEN_KEY = "xkh-intro-seen";
-
 /**
  * The page-load moment: the farm's own logo draws itself, then lifts away.
  *
  * This is the only non-user-triggered motion on the site, so it has to be
- * worth it and it has to get out of the way. It plays once per browser
- * session, can be skipped with a click or any key, and is skipped outright
- * for anyone who has asked for reduced motion.
+ * worth it and it has to get out of the way. It runs on every page load —
+ * the owner wants every arrival to open on the brand — but never on a
+ * client-side route change, and never for anyone who has asked for reduced
+ * motion. A click, a key or a scroll dismisses it at any point.
+ *
+ * The clip is 600kB and sits on the critical path for that reason; if it
+ * ever grows, gate it behind a connection check rather than making people
+ * wait on it.
  */
 export default function Intro() {
   const [state, setState] = useState(() => {
     if (typeof window === "undefined") return "done";
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let seen = false;
-    try {
-      seen = sessionStorage.getItem(SEEN_KEY) === "1";
-    } catch {
-      // Private mode or blocked storage — treat as unseen, it's only a cosmetic.
-    }
-    return reduced || seen ? "done" : "playing";
+    return reduced ? "done" : "playing";
   });
 
   const videoRef = useRef(null);
-
-  useEffect(() => {
-    if (state === "done") return;
-    try {
-      sessionStorage.setItem(SEEN_KEY, "1");
-    } catch {
-      /* not important enough to handle */
-    }
-  }, [state]);
 
   // The overlay covers the page while it plays, so hold the scroll position.
   useEffect(() => {

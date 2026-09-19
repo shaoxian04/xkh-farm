@@ -38,24 +38,69 @@ text pair drops below 4.5:1. Note the one encoded constraint: gold reaches only
 
 ## Typography
 
-One family: **Bricolage Grotesque**, variable across `opsz 12-96`,
-`wdth 75-100`, `wght 300-800`. Display type runs narrow and heavy (`wdth 80`,
-`wght 800`), which is what gives the headlines their poster weight; body runs at
-`wdth 100`. Chinese crop names use **Noto Sans SC** via `.han`.
+Two families, kept firmly apart so the serif stays the loud thing on the page.
+
+**Fraunces** carries the big statements only - the h1/h2 rules, the `.disp`
+wordmark, and the figures in the hero strip. It is variable across
+`opsz 9-144`, `wght 100-900`, plus two custom axes: `SOFT` rounds the
+terminals and `WONK` swaps in the off-kilter alternates. Display is set at
+`opsz 144, SOFT 70, WONK 1` (`--disp-lg`) and label-size display at
+`opsz 36, SOFT 50, WONK 0` (`--disp-sm`). `opsz` is a true optical size axis,
+so it has to track the rendered size - a 20px run at `opsz 144` loses its thin
+strokes.
+
+**Archivo** carries everything meant to be read: body copy, navigation,
+buttons, and every small heading via `.subhead`. It is variable across
+`wdth 62-125`, `wght 100-900`; body sits at `wdth 100`, buttons at `wdth 95`,
+small headings at `wdth 92`.
+
+Chinese crop names and the owner's own mission line use **Noto Sans SC** via
+`.han`.
 
 No monospace, no all-caps labels.
+
+Swapping the face is a two-file change: the two `--font-*` values in
+`src/index.css` and the Google Fonts `<link>` in `index.html`. Nothing in the
+components names a font.
 
 ## Motion
 
 One orchestrated moment and one piece of ambient motion. That is the budget.
 
 - **The page-load reveal** (`Intro.jsx`): the farm's own logo draws itself, then
-  lifts. Once per session via `sessionStorage`, dismissible by click, key or
-  scroll, with a 5.2s failsafe, and skipped entirely under reduced motion.
+  lifts. It runs on **every page load** - the owner wants each arrival to open
+  on the brand - but never on a client-side route change, since the component
+  is not keyed to the route. Dismissible by click, key or scroll, with a 5.2s
+  failsafe, and skipped entirely under reduced motion. The clip is 600kB, which
+  is what makes running it every time affordable.
+- **The hero film**: the farm's whole 35.4s promo, muted and looping. It is
+  the film as the farm made it, titles and end card included, which is the
+  owner's call - the alternative, a re-cut of only the caption-free windows,
+  is recorded in `scripts/build-video.sh` if the view changes. The overlay is
+  tuned to it: the last 7.7s are a cream end card, so the scrim has to hold
+  light text against a light frame, which is why the top stop is `night/45`
+  and the header has a scrim of its own. Measured over that frame: nav 8.4:1,
+  headline 6.5:1, paragraph 8.6:1, stat labels 6.5:1.
+
 - **The crop wall** (`CropWall.jsx`): three rows of the 36 crops scrolling in
   alternating directions. It carries content, since the range is the sales
   argument for a wholesaler, so the motion is doing work. Pauses on hover and
   on focus.
+
+- **The commitments** (`Commitment` in `Home.jsx`): each promise arrives as
+  you reach it - the photograph uncovers upward out of a slight push-in, then
+  its heading and text follow, with the right-hand column a step behind the
+  left. Driven by `useReveal`, an IntersectionObserver hook that fires once
+  and then leaves the element alone, so nothing re-animates on the way back
+  up the page.
+
+  Two things to keep in mind if you touch it. The markup renders **finished**
+  and the hook only ever *adds* the starting position, so no-JS, reduced
+  motion and a failed observer all land on a filled-in section rather than an
+  empty green band. And the observed ref must go on a wrapper that is never
+  clipped: Chrome intersects the target's own `clip-path`, so observing a
+  clipped element deadlocks - it is clipped out of the viewport, never reports
+  as intersecting, and stays hidden for good.
 
 Under reduced motion the wall stops animating, wraps into a static grid, and
 hides its looping duplicates so each crop appears exactly once.

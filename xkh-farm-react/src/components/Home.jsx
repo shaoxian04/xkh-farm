@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import CropWall from "./CropWall";
 
@@ -8,6 +8,7 @@ export default function Home() {
       <Hero />
       <CropWall />
       <Story />
+      <Commitment />
       <Film />
       <Enquiry />
     </>
@@ -19,9 +20,19 @@ export default function Home() {
 function Hero() {
   return (
     <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden">
-      {/* Only the text-free windows of the farm film are used here — the rest
-          of the reel carries its own burned-in titles. Encoded at its native
-          1280x720 and never upscaled past that by the gradient treatment. */}
+      {/* The farm's whole film, uncut, at the owner's request.
+          Two consequences worth knowing before editing this.
+
+          Its burned-in titles cross the copy below, and the last 7.7s are a
+          cream end card that takes the whole frame pale, so the scrim has to
+          hold text against a LIGHT background as well as a dark one — hence
+          to-night/45 rather than /35, and the separate top scrim that keeps
+          the nav legible while the header is still transparent. Verified by
+          sampling rendered pixels over the end card, not by eye.
+
+          The corner watermark stays. Cropping it off would slice the left
+          edge from two of the captions, which start at x=43 and x=53, and
+          delogo leaves a smeared rectangle that is worse than the mark. */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/video/hero.mp4"
@@ -35,7 +46,11 @@ function Hero() {
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-night via-night/80 to-night/35"
+        className="absolute inset-0 bg-gradient-to-t from-night via-night/80 to-night/45"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-52 bg-gradient-to-b from-night/80 to-transparent"
       />
 
       <div className="wrap relative pb-16 pt-28 md:pb-24">
@@ -71,19 +86,20 @@ function Hero() {
           </Link>
         </div>
 
-        <dl className="mt-14 grid max-w-3xl grid-cols-2 gap-x-8 gap-y-6 border-t border-bone/15 pt-8 sm:grid-cols-4">
+        {/* items-end so the labels sit on one line even though the place
+            name runs longer than the figures. */}
+        <dl className="mt-14 grid max-w-3xl grid-cols-2 items-end gap-x-8 gap-y-6 border-t border-bone/15 pt-8 sm:grid-cols-4">
           {[
             ["2005", "Growing since"],
             ["20 yrs", "Farming experience"],
             ["36", "Vegetable lines"],
-            ["Pahang", "Bertam Valley"],
-          ].map(([value, label]) => (
+            // A place, not a figure — set smaller so it reads as a name
+            // rather than pretending to be another statistic.
+            ["Cameron Highlands", "Pahang", "text-xl md:text-2xl"],
+          ].map(([value, label, size]) => (
             <div key={label}>
               <dt className="sr-only">{label}</dt>
-              <dd
-                className="font-display text-3xl font-extrabold md:text-4xl"
-                style={{ fontVariationSettings: '"wdth" 82' }}
-              >
+              <dd className={`disp-lg ${size ?? "text-3xl md:text-4xl"}`}>
                 {value}
               </dd>
               <p className="mt-1 text-sm text-sage">{label}</p>
@@ -151,6 +167,195 @@ function Story() {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Reveals an element the first time it reaches the viewport, and then leaves
+ * it alone — nothing re-animates on the way back up.
+ *
+ * Returns the hidden state rather than the visible one on purpose: the markup
+ * renders finished, and JS only ever *adds* the starting position. Reduced
+ * motion, a missing IntersectionObserver and a JS failure therefore all land
+ * on the finished section rather than an empty green band.
+ *
+ * Attach the returned ref to a wrapper that is never clipped, NOT to the
+ * element carrying data-reveal. Chrome intersects the target's own clip-path,
+ * so observing a clipped element deadlocks: the hidden state clips it out of
+ * the viewport, the observer therefore never reports it as intersecting, and
+ * it stays hidden forever.
+ */
+function useReveal() {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(
+    () =>
+      typeof window === "undefined" ||
+      typeof IntersectionObserver === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+
+  useEffect(() => {
+    const el = ref.current;
+    if (shown || !el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShown(true);
+        io.disconnect();
+      },
+      // Hold until the element is a little way in, so it is not already
+      // finished by the time it is worth looking at.
+      { rootMargin: "0px 0px -10% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shown]);
+
+  return [ref, shown ? undefined : "hidden"];
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Why the farm exists, in the owner's own terms: customers should be able to
+ * eat vegetables that are fresh, healthy, free of chemicals and safe — and the
+ * premium lines besides.
+ *
+ * The first pass set this as a two-column table of terms and definitions. It
+ * was readable and completely inert: a wall of small text on a flat green
+ * field with nothing for the eye to land on. This version gives each promise
+ * a photograph of the thing it describes, pulled from the farm's own film
+ * (see scripts/build-video.sh), and lets each one arrive as you reach it.
+ *
+ * The right-hand column is dropped half a panel so the four do not read as a
+ * grid of identical cards.
+ */
+const PLEDGES = [
+  {
+    term: "Fresh from the highlands",
+    text: "Cut in Cameron Highlands and packed on the farm, so a crate is on its way to your market the same day.",
+    img: "/img/farm/field.webp",
+    alt: "Rows of lettuce growing in the farm's highland beds.",
+  },
+  {
+    term: "Grown without chemicals",
+    text: "Nothing goes on the crop that the family would not want on their own table, and that covers every line the farm sells.",
+    img: "/img/farm/harvest.webp",
+    alt: "A worker cutting a cabbage by hand in the field.",
+  },
+  {
+    term: "The same quality in every crate",
+    text: "Thirty-six lines, graded and packed to one specification, so a repeat order arrives looking like the last one.",
+    img: "/img/farm/crate.webp",
+    alt: "Gloved hands lifting cherry tomatoes out of a blue packing crate.",
+  },
+  {
+    term: "Handled clean, start to finish",
+    text: "Washed, sorted and crated under the farm's own hygiene routine before anything is loaded.",
+    img: "/img/farm/bundle.webp",
+    alt: "A worker bundling spring onions by hand at the edge of the bed.",
+  },
+];
+
+function Commitment() {
+  const [headRef, headState] = useReveal();
+  const [leadRef, leadState] = useReveal();
+
+  return (
+    <section className="band bg-forest" aria-labelledby="commitment">
+      <div className="wrap">
+        <div className="grid gap-x-16 gap-y-8 lg:grid-cols-12">
+          {/* The ref goes on the wrapper, not on the clipped heading — see
+              the note in useReveal. */}
+          <div ref={headRef} className="lg:col-span-7">
+            <h2
+              id="commitment"
+              data-reveal={headState}
+              className="reveal-wipe-x max-w-[14ch] text-[clamp(2.5rem,6vw,5rem)]"
+            >
+              Vegetables you can serve without a second thought.
+            </h2>
+          </div>
+
+          <p
+            ref={leadRef}
+            data-reveal={leadState}
+            style={{ "--reveal-delay": "140ms" }}
+            className="max-w-md self-end text-lg leading-relaxed text-bone/85 lg:col-span-5"
+          >
+            Mr Tan started the farm so that families could eat vegetables they
+            never had to worry about: fresh, healthy, grown without chemicals,
+            and held to a premium standard. Two decades on, that is still the
+            only standard the farm packs to.
+          </p>
+        </div>
+
+        {/* Two independent columns rather than a two-up grid: on a grid every
+            row is as tall as its tallest cell, which left a hole under the
+            shorter promise. The right column is dropped by one step so the
+            four do not read as a block of identical cards. */}
+        <div className="mt-20 grid gap-x-16 md:grid-cols-2">
+          <div className="space-y-20">
+            {PLEDGES.slice(0, 2).map((pledge) => (
+              <Pledge key={pledge.term} {...pledge} />
+            ))}
+          </div>
+          {/* The split is first-two / last-two rather than odds / evens so
+              that when the columns stack on a phone the four still read in
+              their written order. */}
+          <div className="mt-20 space-y-20 md:mt-28">
+            {PLEDGES.slice(2).map((pledge) => (
+              <Pledge key={pledge.term} {...pledge} offset />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Pledge({ term, text, img, alt, offset }) {
+  const [ref, state] = useReveal();
+
+  return (
+    <div
+      ref={ref}
+      className="group"
+      style={{ "--reveal-delay": offset ? "120ms" : "0ms" }}
+    >
+      <figure
+        data-reveal={state}
+        className="reveal-wipe m-0 aspect-[5/4] overflow-hidden bg-night-2"
+      >
+        <img
+          src={img}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          width="960"
+          height="720"
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+        />
+      </figure>
+
+      <h3
+        data-reveal={state}
+        style={{ "--reveal-delay": offset ? "300ms" : "180ms" }}
+        className="disp-lg mt-7 max-w-[20ch] text-[clamp(1.5rem,2.4vw,2.125rem)] leading-[1.05]"
+      >
+        {term}
+      </h3>
+
+      <p
+        data-reveal={state}
+        style={{ "--reveal-delay": offset ? "380ms" : "260ms" }}
+        className="mt-4 max-w-[40ch] text-[1.0625rem] leading-relaxed text-bone/85"
+      >
+        {text}
+      </p>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * The farm's own promotional film. It is 35 seconds with its own titles and
  * narration, so it is presented as a film to watch rather than as decoration —
  * and it only downloads once someone asks for it.
@@ -184,7 +389,7 @@ function Film() {
               ref={ref}
               className="mx-auto block aspect-video w-full max-w-[1280px]"
               src="/video/film.mp4"
-              poster="/video/hero-poster.webp"
+              poster="/video/film-poster.webp"
               controls
               playsInline
               preload="none"
@@ -196,7 +401,7 @@ function Film() {
               className="group relative mx-auto block aspect-video w-full max-w-[1280px] overflow-hidden"
             >
               <img
-                src="/video/hero-poster.webp"
+                src="/video/film-poster.webp"
                 alt=""
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
