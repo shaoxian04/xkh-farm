@@ -21,6 +21,7 @@ Showcasing fresh vegetables, company ethos, and contact details to potential cli
 - [x] Accessibility pass (AA contrast, focus, reduced motion)
 - [x] Redesign: dark highland ground, keyed-out produce, crop wall - see DESIGN.md
 - [x] Owner's vision and mission section (Fraunces/Archivo type, "Commitment")
+- [x] Commitments rebuilt around four stills from the farm's own film
 - [ ] Confirm the wholesale claims below
 
 ## Facts taken from the farm's own film
@@ -51,6 +52,12 @@ it was worded:
   wording can change.
 - 安心 has no clean English equivalent; the headline "Vegetables you can serve
   without a second thought" is carrying it.
+- The Chinese line was on the page in the first pass and has been taken off at
+  the owner's request. `.han` is still used for the crop names.
+
+Each promise is illustrated with a still from `materials/xkh-video.mp4` rather
+than a stock or crop photograph, so what the page shows is the farm's own
+ground and its own people. `scripts/build-video.sh` regenerates them.
 
 ## Copy to confirm
 

@@ -78,6 +78,21 @@ One orchestrated moment and one piece of ambient motion. That is the budget.
   argument for a wholesaler, so the motion is doing work. Pauses on hover and
   on focus.
 
+- **The commitments** (`Commitment` in `Home.jsx`): each promise arrives as
+  you reach it - the photograph uncovers upward out of a slight push-in, then
+  its heading and text follow, with the right-hand column a step behind the
+  left. Driven by `useReveal`, an IntersectionObserver hook that fires once
+  and then leaves the element alone, so nothing re-animates on the way back
+  up the page.
+
+  Two things to keep in mind if you touch it. The markup renders **finished**
+  and the hook only ever *adds* the starting position, so no-JS, reduced
+  motion and a failed observer all land on a filled-in section rather than an
+  empty green band. And the observed ref must go on a wrapper that is never
+  clipped: Chrome intersects the target's own `clip-path`, so observing a
+  clipped element deadlocks - it is clipped out of the viewport, never reports
+  as intersecting, and stays hidden for good.
+
 Under reduced motion the wall stops animating, wraps into a static grid, and
 hides its looping duplicates so each crop appears exactly once.
 

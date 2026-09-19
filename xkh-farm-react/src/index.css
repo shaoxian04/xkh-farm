@@ -161,6 +161,45 @@
   }
 }
 
+/* --- Scroll-cued reveal --------------------------------------------------
+   Used only by the commitments section. The finished state is the default and
+   JS *adds* [data-reveal="hidden"] on mount, so a no-JS render, a reduced-
+   motion render and a failed observer all show the section rather than an
+   empty band. Nothing here re-runs on the way back up the page. */
+[data-reveal] {
+  transition:
+    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
+    clip-path 850ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+}
+[data-reveal="hidden"] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+/* A photograph arrives by uncovering upward and settling out of a slight
+   push-in, rather than sliding up like the text — it reads as the image
+   being revealed rather than as another element animating in. */
+.reveal-wipe { clip-path: inset(0 0 0 0); }
+.reveal-wipe[data-reveal="hidden"] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 100% 0);
+}
+.reveal-wipe > img {
+  transition: transform 1200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-wipe[data-reveal="hidden"] > img { transform: scale(1.08); }
+
+/* The headline uncovers left to right. The negative insets keep the clip off
+   the glyphs themselves — inset(0) would shave descenders and overshoots. */
+.reveal-wipe-x { clip-path: inset(-0.25em -0.12em); }
+.reveal-wipe-x[data-reveal="hidden"] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(-0.25em 100% -0.25em -0.12em);
+}
+
 /* --- The crop wall -------------------------------------------------------
    Continuous horizontal motion. This is the only ambient motion on the page
    and it carries the product range, so it earns its place. */
@@ -196,5 +235,12 @@
   }
   .wall-track > [data-duplicate] {
     display: none;
+  }
+  /* The hook never sets the hidden state under reduced motion, but if it ever
+     did, this makes the finished state unconditional. */
+  [data-reveal="hidden"] {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
   }
 }
