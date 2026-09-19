@@ -1,111 +1,236 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Instagram, Facebook } from 'lucide-react';
-import LandingPage from './components/LandingPage';
-import ProductGallery from './components/ProductGallery';
-import Contact from './components/Contact';
+import { useState, useEffect } from "react";
+import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
+import Intro from "./components/Intro";
+import Home from "./components/Home";
+import ProductGallery from "./components/ProductGallery";
+import Contact from "./components/Contact";
 
-function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+const NAV = [
+  { label: "Farm", to: "/" },
+  { label: "Crops", to: "/products" },
+  { label: "Contact", to: "/contact" },
+];
+
+export default function App() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Close mobile menu on route change
   useEffect(() => {
-    setIsMenuOpen(false);
     window.scrollTo(0, 0);
   }, [location]);
 
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  // Only the home page puts content underneath a transparent header.
+  const overlayHeader = location.pathname === "/";
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Navbar */}
-      <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-3 group">
-            <img src="/img/xkh_logo.jpg" alt="XKH Logo" className="h-10 w-auto rounded-full group-hover:scale-105 transition-transform" />
-            <span className="text-xl font-bold font-serif text-primary">Xin Kiar Huat</span>
-          </Link>
+    <>
+      <Intro />
+      <div className="flex min-h-screen flex-col">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:bg-sun focus:px-4 focus:py-2 focus:text-night"
+        >
+          Skip to content
+        </a>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <NavLink to="/">Home</NavLink>
-            <NavLink to="/products">Products</NavLink>
-            <NavLink to="/contact">Contact</NavLink>
+        <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} overlay={overlayHeader} />
 
+        <main id="main" className={overlayHeader ? "flex-1" : "flex-1 pt-[4.5rem]"}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<ProductGallery />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </main>
+
+        <Footer />
+      </div>
+    </>
+  );
+}
+
+function Header({ menuOpen, setMenuOpen, overlay }) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 24);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const solid = !overlay || scrolled || menuOpen;
+
+  return (
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        solid ? "bg-night/95 backdrop-blur" : "bg-transparent"
+      }`}
+    >
+      <div className="wrap flex h-[4.5rem] items-center justify-between gap-6">
+        <Link to="/" className="flex items-center gap-3" aria-label="XKH Farm, home">
+          <img
+            src="/brand/logo-badge-light.webp"
+            alt=""
+            width="644"
+            height="700"
+            className="h-10 w-auto"
+          />
+          <span
+            className="font-display text-xl font-extrabold"
+            style={{ fontVariationSettings: '"wdth" 85' }}
+          >
+            XKH Farm
+          </span>
+        </Link>
+
+        <nav aria-label="Primary" className="hidden items-center gap-9 md:flex">
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/"}
+              className={({ isActive }) =>
+                `font-medium transition-colors ${
+                  isActive ? "text-sun" : "text-bone/80 hover:text-bone"
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+          <a
+            href="https://wa.me/60142580200"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="btn btn-sun !min-h-11 text-[0.95rem]"
+          >
+            Enquire
+          </a>
+        </nav>
+
+        <button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-nav"
+          className="-mr-2 flex h-11 min-w-11 items-center justify-end px-2 font-medium md:hidden"
+        >
+          {menuOpen ? "Close" : "Menu"}
+        </button>
+      </div>
+
+      {menuOpen && (
+        <nav
+          id="mobile-nav"
+          aria-label="Primary"
+          className="border-t border-bone/10 bg-night md:hidden"
+        >
+          <div className="wrap py-4">
+            {NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/"}
+                onClick={() => setMenuOpen(false)}
+                style={{ fontVariationSettings: '"wdth" 85' }}
+                className={({ isActive }) =>
+                  `block border-b border-bone/10 py-4 font-display text-3xl font-extrabold ${
+                    isActive ? "text-sun" : "text-bone"
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+            <a
+              href="https://wa.me/60142580200"
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={() => setMenuOpen(false)}
+              className="btn btn-sun mt-5 w-full"
+            >
+              Enquire on WhatsApp
+            </a>
           </div>
+        </nav>
+      )}
+    </header>
+  );
+}
 
-          {/* Mobile Menu Button */}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-primary">
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
-        </div>
-
-        {/* Mobile Nav */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100 absolute w-full px-6 py-4 flex flex-col gap-4 shadow-xl">
-            <MobileNavLink to="/">Home</MobileNavLink>
-            <MobileNavLink to="/products">Products</MobileNavLink>
-            <MobileNavLink to="/contact">Contact</MobileNavLink>
-          </div>
-        )}
-      </nav>
-
-      {/* Main Content */}
-      <main className="flex-grow pt-[72px]">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/products" element={<ProductGallery />} />
-          <Route path="/contact" element={<Contact />} />
-        </Routes>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-primary text-white py-12">
-        <div className="container mx-auto px-6 grid md:grid-cols-3 gap-8 text-center md:text-left">
+function Footer() {
+  return (
+    <footer className="border-t border-bone/10 bg-night">
+      <div className="wrap py-16">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1.2fr]">
           <div>
-            <h3 className="text-xl font-bold font-serif mb-4">Xin Kiar Huat Enterprise</h3>
-            <p className="opacity-80">Sustainable farming for a healthier tomorrow.</p>
+            <img
+              src="/brand/logo-lockup-light.webp"
+              alt=""
+              width="644"
+              height="787"
+              className="h-24 w-auto"
+            />
+            <p className="mt-5 font-display text-lg font-bold">
+              Xin Kiar Huat Enterprise{" "}
+              <span className="han font-normal text-sage">新加發企业</span>
+            </p>
+            <p className="mt-2 max-w-xs text-[0.95rem] text-bone/65">
+              Growing fresh in Cameron Highlands since 2005.
+            </p>
           </div>
+
+          <nav aria-label="Footer">
+            <h2 className="font-display font-bold text-sage">Pages</h2>
+            <ul className="mt-4 space-y-2.5">
+              {NAV.map((item) => (
+                <li key={item.to}>
+                  <Link to={item.to} className="text-bone/80 hover:text-sun">
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
           <div>
-            <h4 className="font-bold mb-4">Quick Links</h4>
-            <ul className="space-y-2 opacity-80">
-              <li><Link to="/" className="hover:text-accent">Home</Link></li>
-              <li><Link to="/products" className="hover:text-accent">Products</Link></li>
-              <li><Link to="/contact" className="hover:text-accent">Contact</Link></li>
+            <h2 className="font-display font-bold text-sage">Get in touch</h2>
+            <ul className="mt-4 space-y-2.5">
+              <li>
+                <a href="tel:+60142580200" className="text-bone/80 hover:text-sun">
+                  +60 14-258 0200
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:xinkiarhuat88@gmail.com"
+                  className="break-all text-bone/80 hover:text-sun"
+                >
+                  xinkiarhuat88@gmail.com
+                </a>
+              </li>
+              <li className="text-bone/55">
+                Jln Ringlet – Sungai Koyan, Bertam Valley, 39200 Ringlet, Pahang
+              </li>
+              <li className="text-bone/55">Open daily, 8am – 6pm</li>
             </ul>
           </div>
-          <div>
-            <h4 className="font-bold mb-4">Connect</h4>
-            <div className="flex justify-center md:justify-start gap-4">
-              <a href="#" className="bg-white/10 p-2 rounded-full hover:bg-accent transition"><Facebook size={20} /></a>
-              <a href="#" className="bg-white/10 p-2 rounded-full hover:bg-accent transition"><Instagram size={20} /></a>
-            </div>
-            <p className="mt-4 opacity-60 text-sm">&copy; 2026 Xin Kiar Huat Enterprise.</p>
-          </div>
         </div>
-      </footer>
-    </div>
+
+        <p className="mt-12 border-t border-bone/10 pt-6 text-sm text-bone/45">
+          © {new Date().getFullYear()} Xin Kiar Huat Enterprise
+        </p>
+      </div>
+    </footer>
   );
 }
-
-function NavLink({ to, children }) {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-  return (
-    <Link
-      to={to}
-      className={`font-medium transition-colors hover:text-primary ${isActive ? 'text-primary font-bold' : 'text-gray-600'}`}
-    >
-      {children}
-    </Link>
-  );
-}
-
-function MobileNavLink({ to, children }) {
-  return (
-    <Link to={to} className="block text-lg font-medium text-gray-700 py-2 border-b border-gray-50 hover:text-primary">
-      {children}
-    </Link>
-  );
-}
-
-export default App;
