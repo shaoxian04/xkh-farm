@@ -85,12 +85,7 @@ function Header({ menuOpen, setMenuOpen, overlay }) {
             height="700"
             className="h-10 w-auto"
           />
-          <span
-            className="font-display text-xl font-extrabold"
-            style={{ fontVariationSettings: '"wdth" 85' }}
-          >
-            XKH Farm
-          </span>
+          <span className="disp text-xl">XKH Farm</span>
         </Link>
 
         <nav aria-label="Primary" className="hidden items-center gap-9 md:flex">
@@ -144,7 +139,7 @@ function Header({ menuOpen, setMenuOpen, overlay }) {
                 onClick={() => setMenuOpen(false)}
                 style={{ fontVariationSettings: '"wdth" 85' }}
                 className={({ isActive }) =>
-                  `block border-b border-bone/10 py-4 font-display text-3xl font-extrabold ${
+                  `block border-b border-bone/10 py-4 text-3xl font-extrabold ${
                     isActive ? "text-sun" : "text-bone"
                   }`
                 }
@@ -181,7 +176,7 @@ function Footer() {
               height="787"
               className="h-24 w-auto"
             />
-            <p className="mt-5 font-display text-lg font-bold">
+            <p className="disp mt-5 text-lg">
               Xin Kiar Huat Enterprise{" "}
               <span className="han font-normal text-sage">新加發企业</span>
             </p>
@@ -191,7 +186,7 @@ function Footer() {
           </div>
 
           <nav aria-label="Footer">
-            <h2 className="font-display font-bold text-sage">Pages</h2>
+            <h2 className="subhead text-sage">Pages</h2>
             <ul className="mt-4 space-y-2.5">
               {NAV.map((item) => (
                 <li key={item.to}>
@@ -204,7 +199,7 @@ function Footer() {
           </nav>
 
           <div>
-            <h2 className="font-display font-bold text-sage">Get in touch</h2>
+            <h2 className="subhead text-sage">Get in touch</h2>
             <ul className="mt-4 space-y-2.5">
               <li>
                 <a href="tel:+60142580200" className="text-bone/80 hover:text-sun">

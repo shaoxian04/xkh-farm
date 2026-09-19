@@ -38,12 +38,30 @@ text pair drops below 4.5:1. Note the one encoded constraint: gold reaches only
 
 ## Typography
 
-One family: **Bricolage Grotesque**, variable across `opsz 12-96`,
-`wdth 75-100`, `wght 300-800`. Display type runs narrow and heavy (`wdth 80`,
-`wght 800`), which is what gives the headlines their poster weight; body runs at
-`wdth 100`. Chinese crop names use **Noto Sans SC** via `.han`.
+Two families, kept firmly apart so the serif stays the loud thing on the page.
+
+**Fraunces** carries the big statements only - the h1/h2 rules, the `.disp`
+wordmark, and the figures in the hero strip. It is variable across
+`opsz 9-144`, `wght 100-900`, plus two custom axes: `SOFT` rounds the
+terminals and `WONK` swaps in the off-kilter alternates. Display is set at
+`opsz 144, SOFT 70, WONK 1` (`--disp-lg`) and label-size display at
+`opsz 36, SOFT 50, WONK 0` (`--disp-sm`). `opsz` is a true optical size axis,
+so it has to track the rendered size - a 20px run at `opsz 144` loses its thin
+strokes.
+
+**Archivo** carries everything meant to be read: body copy, navigation,
+buttons, and every small heading via `.subhead`. It is variable across
+`wdth 62-125`, `wght 100-900`; body sits at `wdth 100`, buttons at `wdth 95`,
+small headings at `wdth 92`.
+
+Chinese crop names and the owner's own mission line use **Noto Sans SC** via
+`.han`.
 
 No monospace, no all-caps labels.
+
+Swapping the face is a two-file change: the two `--font-*` values in
+`src/index.css` and the Google Fonts `<link>` in `index.html`. Nothing in the
+components names a font.
 
 ## Motion
 
