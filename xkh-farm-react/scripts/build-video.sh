@@ -41,24 +41,36 @@ if [ ! -f "$SRC/xkh-video.mp4" ]; then
   exit 1
 fi
 
-echo "hero loop (two longest shots, eased to 0.63x, watermark cropped off)"
-# Only the two longest continuous shots are used - greens+onions (24.03-27.70)
-# and the crate (17.40-18.40) - so the loop carries three cuts in 7.3s rather
-# than six. They are then eased to 0.63x, which lets each shot hold for about
-# three seconds instead of one and a half.
+echo "hero loop (every usable shot, eased to 0.63x, watermark cropped off)"
+# Everything in the film that is caption-free and long enough to hold, which
+# is 21% of it:
+#     21.80-23.10  cabbage      1.30s
+#     24.03-27.70  greens, then onions (one cut at 25.83)
+#     17.40-18.40  the crate
+# Skipped on purpose: the chives shot at 23.10-24.03 is 0.93s, short enough
+# to read as a flicker next to the others, and the three clean aerials at
+# 6.30, 9.60 and 13.60 are 0.55s, 0.30s and 0.45s - no amount of easing
+# rescues those.
 #
-# minterpolate does the slowdown by synthesising frames, not by repeating them:
-# straight setpts would give 30fps carrying 19 distinct frames a second, which
-# judders. Check it with `ffmpeg -i hero.mp4 -vf mpdecimate -f null -`; every
-# frame should survive. It is the slow step in this script, around 40s.
+# Eased to 0.63x so each shot holds around three seconds rather than one and
+# a half: the promo is cut to hold attention on its own, and at full speed
+# behind static hero copy that rhythm reads as the video being sped up.
+#
+# minterpolate does the slowdown by synthesising frames, not by repeating
+# them; straight setpts would give 30fps carrying 19 distinct frames a second,
+# which judders. Check with `ffmpeg -i hero.mp4 -vf mpdecimate -f null -` -
+# nearly every frame should survive. It is the slow step here, around 50s.
 ffmpeg -v error -y -i "$SRC/xkh-video.mp4" -filter_complex \
-  "[0:v]trim=24.03:27.70,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
+  "[0:v]trim=21.80:23.10,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
 minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
 setpts=1.6*PTS[a];\
-   [0:v]trim=17.40:18.40,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
+   [0:v]trim=24.03:27.70,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
 minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
 setpts=1.6*PTS[b];\
-   [a][b]concat=n=2:v=1[v]" \
+   [0:v]trim=17.40:18.40,setpts=PTS-STARTPTS,crop=1080:720:200:0,\
+minterpolate=fps=48:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,\
+setpts=1.6*PTS[c];\
+   [a][b][c]concat=n=3:v=1[v]" \
   -map "[v]" -an -r 30 -c:v libx264 -crf 26 -preset slow \
   -maxrate 2600k -bufsize 5200k -movflags +faststart -pix_fmt yuv420p \
   "$OUT/hero.mp4"
