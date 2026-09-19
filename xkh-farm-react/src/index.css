@@ -1,30 +1,157 @@
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #2E7D32;
-  --color-accent: #F9A825;
-  --color-bg: #F1F8E9;
-  --color-text: #1B5E20;
+/* ==========================================================================
+   XKH FARM
+   The page is deep highland green so the produce supplies the colour. The
+   values below were sampled from the farm's own assets rather than picked
+   from a palette: the green from the logo mark, the sage from an aerial of
+   the fields, the slate from the blue crates they pack into.
+   ========================================================================== */
 
-  --font-sans: Inter, sans-serif;
-  --font-serif: Merriweather, serif;
+@theme {
+  /* --- Ground ----------------------------------------------------------- */
+  --color-night: #07240F;    /* deep highland forest — the page ground */
+  --color-night-2: #0C3319;  /* raised surface on the dark ground */
+
+  --color-forest: #0E5A24;   /* sampled from the logo mark */
+  --color-sage: #9CB584;     /* sampled from an aerial of the fields */
+  --color-crate: #2E3B52;    /* sampled from their packing crates */
+
+  --color-bone: #F5F1E6;     /* warm white — body text on dark */
+  --color-bone-2: #EAE6DA;   /* the light band */
+  --color-sun: #E8B33C;      /* highland sun; emphasis, used sparingly */
+  --color-sun-hi: #F2C765;   /* hover only */
+
+  --color-soil: #1B1A14;     /* text on the light band */
+  --color-soil-2: #55513F;   /* secondary text on the light band */
+
+  /* --- Type ------------------------------------------------------------- */
+  --font-display: "Bricolage Grotesque", "Helvetica Neue", sans-serif;
+  --font-body: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-han: "Noto Sans SC", sans-serif;
 }
 
 @layer base {
-  body {
-    @apply bg-bg text-text font-sans;
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
+  body {
+    @apply bg-night text-bone;
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.55;
+    font-variation-settings: "wdth" 100;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Display type is the loud element here: heavy and narrow, set tight. The
+     width axis is what gives it the poster feel. */
   h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-serif font-bold;
+  h2 {
+    font-family: var(--font-display);
+    font-variation-settings: "wdth" 80, "opsz" 96;
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-variation-settings: "wdth" 92, "opsz" 24;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  p { text-wrap: pretty; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-sun);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-sun);
+    color: var(--color-night);
   }
 }
 
-.glass-card {
-  @apply bg-white/80 backdrop-blur-md shadow-lg rounded-xl border border-white/20;
+@layer components {
+  .han {
+    font-family: var(--font-han);
+    font-weight: 400;
+  }
+
+  .wrap {
+    /* padding-inline only — a padding shorthand here would outrank and
+       silently zero the vertical rhythm set by .band. */
+    @apply mx-auto w-full;
+    max-width: 90rem;
+    padding-inline: clamp(1.25rem, 4vw, 4rem);
+  }
+
+  .band { padding-block: clamp(5rem, 10vw, 9rem); }
+
+  /* Solid, chunky buttons. No pill, no gradient, no trailing arrow. */
+  .btn {
+    @apply inline-flex items-center justify-center;
+    min-height: 3.25rem;
+    padding-inline: 1.75rem;
+    font-weight: 600;
+    font-variation-settings: "wdth" 95;
+    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+  }
+  .btn:active { transform: translateY(1px); }
+
+  .btn-sun { background: var(--color-sun); color: var(--color-night); }
+  .btn-sun:hover { background: var(--color-sun-hi); }
+
+  .btn-ghost {
+    border: 1.5px solid rgba(245, 241, 230, 0.35);
+    color: var(--color-bone);
+  }
+  .btn-ghost:hover {
+    background: rgba(245, 241, 230, 0.10);
+    border-color: var(--color-bone);
+  }
+}
+
+/* --- The crop wall -------------------------------------------------------
+   Continuous horizontal motion. This is the only ambient motion on the page
+   and it carries the product range, so it earns its place. */
+.wall-track {
+  display: flex;
+  width: max-content;
+  animation: wall-scroll linear infinite;
+  will-change: transform;
+}
+.wall-row:hover .wall-track,
+.wall-row:focus-within .wall-track {
+  animation-play-state: paused;
+}
+@keyframes wall-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* A frozen marquee would hide most of the crops, so let the row wrap into
+     a static grid instead of stopping mid-scroll. The looping duplicates are
+     dropped here, otherwise every crop would appear twice. */
+  .wall-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .wall-track > [data-duplicate] {
+    display: none;
+  }
 }
