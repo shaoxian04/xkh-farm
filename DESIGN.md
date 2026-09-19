@@ -50,8 +50,11 @@ No monospace, no all-caps labels.
 One orchestrated moment and one piece of ambient motion. That is the budget.
 
 - **The page-load reveal** (`Intro.jsx`): the farm's own logo draws itself, then
-  lifts. Once per session via `sessionStorage`, dismissible by click, key or
-  scroll, with a 5.2s failsafe, and skipped entirely under reduced motion.
+  lifts. It runs on **every page load** - the owner wants each arrival to open
+  on the brand - but never on a client-side route change, since the component
+  is not keyed to the route. Dismissible by click, key or scroll, with a 5.2s
+  failsafe, and skipped entirely under reduced motion. The clip is 600kB, which
+  is what makes running it every time affordable.
 - **The crop wall** (`CropWall.jsx`): three rows of the 36 crops scrolling in
   alternating directions. It carries content, since the range is the sales
   argument for a wholesaler, so the motion is doing work. Pauses on hover and
