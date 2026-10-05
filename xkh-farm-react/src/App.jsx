@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
 import Intro from "./components/Intro";
 import Home from "./components/Home";
 import ProductGallery from "./components/ProductGallery";
 import Contact from "./components/Contact";
+import { gsap, ScrollTrigger, useGSAP, MOTION, riseIn } from "./lib/gsap";
+import { startSmoothScroll, setScrollLocked, resetScroll } from "./lib/smooth";
 
 const NAV = [
   { label: "Farm", to: "/" },
@@ -15,14 +17,23 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
+  useEffect(() => startSmoothScroll(), []);
+  useMagneticButtons();
+
   useEffect(() => {
-    window.scrollTo(0, 0);
+    resetScroll();
+    // The new page's triggers measured themselves against the old page's
+    // scroll position; let them re-measure once it has laid out.
+    const id = requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => cancelAnimationFrame(id);
   }, [location]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
+    setScrollLocked(menuOpen);
     return () => {
       document.body.style.overflow = "";
+      setScrollLocked(false);
     };
   }, [menuOpen]);
 
@@ -32,6 +43,7 @@ export default function App() {
   return (
     <>
       <Intro />
+      <div aria-hidden="true" className="scroll-progress" />
       <div className="flex min-h-screen flex-col">
         <a
           href="#main"
@@ -57,6 +69,41 @@ export default function App() {
 }
 
 /**
+ * Solid buttons lean toward the pointer and spring back when it leaves. Fine
+ * pointers only — on touch there is no hover to lean toward.
+ */
+function useMagneticButtons() {
+  useEffect(() => {
+    const fine = window.matchMedia(`(pointer: fine) and ${MOTION}`);
+    if (!fine.matches) return;
+
+    function onMove(e) {
+      const btn = e.target.closest?.(".btn");
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      gsap.to(btn, {
+        x: (e.clientX - r.left - r.width / 2) * 0.25,
+        y: (e.clientY - r.top - r.height / 2) * 0.35,
+        duration: 0.5,
+        ease: "power3.out",
+      });
+    }
+    function onOut(e) {
+      const btn = e.target.closest?.(".btn");
+      if (!btn || btn.contains(e.relatedTarget)) return;
+      gsap.to(btn, { x: 0, y: 0, duration: 0.9, ease: "elastic.out(1, 0.4)" });
+    }
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerout", onOut);
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerout", onOut);
+    };
+  }, []);
+}
+
+/**
  * The WhatsApp glyph, drawn in currentColor so it takes the button's ink.
  * Brand green on the gold button would fight it, and a two-colour mark inside
  * a solid button reads as a pasted-in logo rather than part of the control.
@@ -77,6 +124,29 @@ function WhatsAppMark(props) {
 
 function Header({ menuOpen, setMenuOpen, overlay }) {
   const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef(null);
+
+  // Slides away while reading down the page and returns the moment you
+  // scroll back up. Never hides near the top, or with the menu open.
+  useGSAP(
+    () => {
+      gsap.matchMedia().add(MOTION, () => {
+        const hide = gsap.quickTo(headerRef.current, "yPercent", {
+          duration: 0.45,
+          ease: "power3.out",
+        });
+        ScrollTrigger.create({
+          start: 0,
+          end: "max",
+          onUpdate(self) {
+            const down = self.direction === 1 && self.scroll() > 240;
+            hide(down && !menuOpen ? -100 : 0);
+          },
+        });
+      });
+    },
+    { dependencies: [menuOpen], revertOnUpdate: true },
+  );
 
   useEffect(() => {
     function onScroll() {
@@ -91,6 +161,7 @@ function Header({ menuOpen, setMenuOpen, overlay }) {
 
   return (
     <header
+      ref={headerRef}
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
         solid ? "bg-night/95 backdrop-blur" : "bg-transparent"
       }`}
@@ -185,11 +256,26 @@ function Header({ menuOpen, setMenuOpen, overlay }) {
 }
 
 function Footer() {
+  const ref = useRef(null);
+
+  useGSAP(
+    () => {
+      gsap.matchMedia().add(MOTION, () => {
+        riseIn(ref.current.querySelectorAll("[data-col]"), {
+          trigger: ref.current,
+          start: "top 90%",
+          stagger: 0.12,
+        });
+      });
+    },
+    { scope: ref },
+  );
+
   return (
-    <footer className="border-t border-bone/10 bg-night">
+    <footer ref={ref} className="border-t border-bone/10 bg-night">
       <div className="wrap py-16">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1.2fr]">
-          <div>
+          <div data-col>
             <img
               src="/brand/logo-lockup-light.webp"
               alt=""
@@ -197,16 +283,13 @@ function Footer() {
               height="787"
               className="h-24 w-auto"
             />
-            <p className="disp mt-5 text-lg">
-              Xin Kiar Huat Enterprise{" "}
-              <span className="han font-normal text-sage">新加發企业</span>
-            </p>
+            <p className="disp mt-5 text-lg">XKH Farm</p>
             <p className="mt-2 max-w-xs text-[0.95rem] text-bone/65">
               Growing fresh in Cameron Highlands since 2005.
             </p>
           </div>
 
-          <nav aria-label="Footer">
+          <nav data-col aria-label="Footer">
             <h2 className="subhead text-sage">Pages</h2>
             <ul className="mt-4 space-y-2.5">
               {NAV.map((item) => (
@@ -219,7 +302,7 @@ function Footer() {
             </ul>
           </nav>
 
-          <div>
+          <div data-col>
             <h2 className="subhead text-sage">Get in touch</h2>
             <ul className="mt-4 space-y-2.5">
               <li>
@@ -244,7 +327,7 @@ function Footer() {
         </div>
 
         <p className="mt-12 border-t border-bone/10 pt-6 text-sm text-bone/45">
-          © {new Date().getFullYear()} Xin Kiar Huat Enterprise
+          © {new Date().getFullYear()} XKH Farm
         </p>
       </div>
     </footer>

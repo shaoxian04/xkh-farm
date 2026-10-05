@@ -144,9 +144,9 @@
     padding-inline: 1.75rem;
     font-weight: 600;
     font-variation-settings: "wdth" 95;
-    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+    transition: background-color 180ms ease, color 180ms ease;
   }
-  .btn:active { transform: translateY(1px); }
+  .btn:active { translate: 0 1px; }
 
   .btn-sun { background: var(--color-sun); color: var(--color-night); }
   .btn-sun:hover { background: var(--color-sun-hi); }
@@ -161,43 +161,116 @@
   }
 }
 
-/* --- Scroll-cued reveal --------------------------------------------------
-   Used only by the commitments section. The finished state is the default and
-   JS *adds* [data-reveal="hidden"] on mount, so a no-JS render, a reduced-
-   motion render and a failed observer all show the section rather than an
-   empty band. Nothing here re-runs on the way back up the page. */
-[data-reveal] {
-  transition:
-    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
-    transform 700ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
-    clip-path 850ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+/* --- Scroll progress -----------------------------------------------------
+   A hairline of sun along the top edge, driven by the scroll timeline itself
+   so it costs no JS. Browsers without scroll-driven animations simply don't
+   show it. */
+.scroll-progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 60;
+    height: 3px;
+    background: var(--color-sun);
+    transform-origin: 0 50%;
+    animation: progress linear both;
+    animation-timeline: scroll(root);
+  }
 }
-[data-reveal="hidden"] {
-  opacity: 0;
-  transform: translateY(18px);
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 
-/* A photograph arrives by uncovering upward and settling out of a slight
-   push-in, rather than sliding up like the text — it reads as the image
-   being revealed rather than as another element animating in. */
-.reveal-wipe { clip-path: inset(0 0 0 0); }
-.reveal-wipe[data-reveal="hidden"] {
-  opacity: 1;
-  transform: none;
-  clip-path: inset(0 0 100% 0);
-}
-.reveal-wipe > img {
-  transition: transform 1200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.reveal-wipe[data-reveal="hidden"] > img { transform: scale(1.08); }
+/* --- Motion ---------------------------------------------------------------
+   All movement is GSAP (src/lib/gsap.js), registered only for people who have
+   not asked for reduced motion, so the markup below is always the finished,
+   static page. What lives here is only the layout the motion needs. */
 
-/* The headline uncovers left to right. The negative insets keep the clip off
-   the glyphs themselves — inset(0) would shave descenders and overshoots. */
-.reveal-wipe-x { clip-path: inset(-0.25em -0.12em); }
-.reveal-wipe-x[data-reveal="hidden"] {
-  opacity: 1;
-  transform: none;
-  clip-path: inset(-0.25em 100% -0.25em -0.12em);
+/* Lenis owns smooth scrolling while it runs; native smooth scrolling on top
+   of it would fight every wheel tick. */
+html.lenis { scroll-behavior: auto; }
+/* Lenis switches iframes off during smooth scroll; the map must stay usable. */
+html.lenis.lenis-smooth iframe { pointer-events: auto; }
+
+/* A photo that drifts inside its frame needs overscan above and below, or
+   the drift would open a gap at the edge. The frame must be position:relative
+   and overflow:hidden. */
+.overscan {
+  position: absolute;
+  inset-inline: 0;
+  top: -8%;
+  width: 100%;
+  height: 116%;
+  object-fit: cover;
+}
+
+/* SplitText masks each line with overflow:clip on a box exactly one line
+   tall, and with the display face's tight leading that box shaves off the
+   descenders (y, g, p) and the tops of accents. Padding grows the clip box
+   and the matching negative margin keeps the lines where they were. */
+.split-line-mask {
+  padding-block: 0.15em 0.22em;
+  margin-block: -0.15em -0.22em;
+}
+
+/* The giant outlined promise that slides along the foot of the enquiry. Sage
+   rather than bone, with a faint fill, so it reads clearly as a background
+   layer without competing with the cream headline above it. */
+.outline-type {
+  font-family: var(--font-display);
+  font-variation-settings: var(--disp-lg);
+  font-weight: 800;
+  font-size: clamp(4.5rem, 14vw, 13rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: rgba(156, 181, 132, 0.1);
+  -webkit-text-stroke: 2px rgba(156, 181, 132, 0.6);
+}
+
+/* --- The health promises -------------------------------------------------
+   Stacked on narrow screens. From 1024px they sit in one row that is pinned
+   and moved sideways by the scroll; the panel width is capped by the viewport
+   height so a panel, photo and copy together always fit the pinned screen. */
+.pledge-track {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+  margin: 0;
+  padding: 5rem clamp(1.25rem, 4vw, 4rem) clamp(5rem, 10vw, 9rem);
+  list-style: none;
+}
+
+@media (min-width: 1024px) {
+  .pledge-pin {
+    display: flex;
+    min-height: 100svh;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2.5rem;
+    padding-block: 5.5rem 3rem;
+    overflow: hidden;
+  }
+  .pledge-track {
+    flex-direction: row;
+    align-items: flex-start;
+    width: max-content;
+    gap: 6vw;
+    padding-block: 0;
+    /* Line the first panel up with the page's content edge. */
+    padding-inline: max(
+      clamp(1.25rem, 4vw, 4rem),
+      calc((100vw - 90rem) / 2 + 4rem)
+    );
+  }
+  .pledge {
+    width: min(42vw, calc((100svh - 22rem) * 1.25));
+  }
+  /* Every other panel sits lower, so the row reads as a path rather than a
+     strip of identical cards. */
+  .pledge:nth-child(even) { margin-top: 4rem; }
 }
 
 /* --- The crop wall -------------------------------------------------------
@@ -212,6 +285,9 @@
 .wall-row:hover .wall-track,
 .wall-row:focus-within .wall-track {
   animation-play-state: paused;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wall-row { margin-inline: -25vw; }
 }
 @keyframes wall-scroll {
   from { transform: translate3d(0, 0, 0); }
@@ -236,11 +312,8 @@
   .wall-track > [data-duplicate] {
     display: none;
   }
-  /* The hook never sets the hidden state under reduced motion, but if it ever
-     did, this makes the finished state unconditional. */
-  [data-reveal="hidden"] {
-    opacity: 1 !important;
-    transform: none !important;
-    clip-path: none !important;
-  }
+  .scroll-progress { display: none; }
+  /* Without the sideways travel the promise row would run off the screen,
+     so let it scroll on its own instead. */
+  .pledge-pin { overflow-x: auto; }
 }

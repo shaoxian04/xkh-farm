@@ -65,14 +65,27 @@ components names a font.
 
 ## Motion
 
-One orchestrated moment and one piece of ambient motion. That is the budget.
+The original budget here was one orchestrated moment and one piece of ambient
+motion. **On 2026-10-05 the owner asked for considerably more** - every
+section moving as you scroll, and "fancier" than a plain fade - so the budget
+is now per section, with each one given a single idea of its own rather than
+the same reveal repeated 24 times (which is what the first pass was rejected
+for; see above).
+
+Everything is GSAP: ScrollTrigger for scroll-linked work, SplitText for the
+headlines, and Lenis for inertial scrolling driven off GSAP's ticker so the
+two read the same frame. Setup and the shared helpers are in
+`src/lib/gsap.js` and `src/lib/smooth.js`. The libraries add about 57kB
+gzipped to the bundle.
 
 - **The page-load reveal** (`Intro.jsx`): the farm's own logo draws itself, then
   lifts. It runs on **every page load** - the owner wants each arrival to open
   on the brand - but never on a client-side route change, since the component
   is not keyed to the route. Dismissible by click, key or scroll, with a 5.2s
   failsafe, and skipped entirely under reduced motion. The clip is 600kB, which
-  is what makes running it every time affordable.
+  is what makes running it every time affordable. While it plays it sets
+  `html[data-intro]`; `afterIntro()` holds the hero entrance and Lenis until it
+  fires `intro:done`, or they would finish unseen behind it.
 - **The hero film**: the farm's whole 35.4s promo, muted and looping. It is
   the film as the farm made it, titles and end card included, which is the
   owner's call - the alternative, a re-cut of only the caption-free windows,
@@ -82,28 +95,51 @@ One orchestrated moment and one piece of ambient motion. That is the budget.
   and the header has a scrim of its own. Measured over that frame: nav 8.4:1,
   headline 6.5:1, paragraph 8.6:1, stat labels 6.5:1.
 
+  On arrival the logo un-blurs, the letters of the title flip up one by one,
+  and the figures count up. Scrolling away pushes the film in and lifts the
+  copy out.
+- **Headlines everywhere** rise word by word out of masked lines
+  (`riseWords`); body copy rises line by line (`riseLines`).
 - **The crop wall** (`CropWall.jsx`): three rows of the 36 crops scrolling in
   alternating directions. It carries content, since the range is the sales
   argument for a wholesaler, so the motion is doing work. Pauses on hover and
-  on focus.
+  on focus. On top of the marquee, the rows slide against each other with the
+  scroll and lean into a fast scroll.
+- **The story photo** opens out of a growing circle, then drifts.
+- **The commitments** (`Commitment` in `Home.jsx`): from 1024px the row pins
+  and the scroll moves the four promises sideways; each photo opens from a
+  rounded window and un-zooms as it arrives. Below 1024px they stack and do
+  the same one at a time.
+- **The film** grows from a small rounded card to full width; its play button
+  follows the pointer.
+- **The enquiry** has "Fresh · Healthy · Chemical-free" in outlined type
+  sliding along its foot.
+- **Site-wide**: the header hides on the way down and returns on the way up;
+  solid buttons lean toward the pointer; a sun hairline tracks scroll progress.
 
-- **The commitments** (`Commitment` in `Home.jsx`): each promise arrives as
-  you reach it - the photograph uncovers upward out of a slight push-in, then
-  its heading and text follow, with the right-hand column a step behind the
-  left. Driven by `useReveal`, an IntersectionObserver hook that fires once
-  and then leaves the element alone, so nothing re-animates on the way back
-  up the page.
+Things that have already gone wrong once, so check them if you touch this:
 
-  Two things to keep in mind if you touch it. The markup renders **finished**
-  and the hook only ever *adds* the starting position, so no-JS, reduced
-  motion and a failed observer all land on a filled-in section rather than an
-  empty green band. And the observed ref must go on a wrapper that is never
-  clipped: Chrome intersects the target's own `clip-path`, so observing a
-  clipped element deadlocks - it is clipped out of the viewport, never reports
-  as intersecting, and stays hidden for good.
+- SplitText masks each line with a box exactly one line tall, which shaves the
+  descenders off Fraunces at its tight leading. `.split-line-mask` pads the
+  box (and the rise starts far enough down to clear the padding). Always pass
+  `linesClass: "split-line"` when splitting with a mask.
+- When two tweens touch the same element, write the entrance as `fromTo`, not
+  `from`. A `from` records the element's *current* value as its end, and the
+  story photo once settled at 1.6x zoom that way.
+- In the pinned row, the last panel never travels further left than about
+  halfway across, because the row stops flush right. Its trigger has to finish
+  before that (`left 62%`) or the last photo is left half open.
+- The crop-wall rows carry `margin-inline: -25vw` (motion only) so their
+  scroll-linked slide never exposes an empty strip at either edge.
+- Lenis turns off iframe pointer events while it runs; `index.css` turns them
+  back on so the contact map stays usable.
 
-Under reduced motion the wall stops animating, wraps into a static grid, and
-hides its looping duplicates so each crop appears exactly once.
+Every animation is registered inside `gsap.matchMedia()` under
+`(prefers-reduced-motion: no-preference)`, so under reduced motion nothing is
+hidden, split or pinned, Lenis is not started, and the page is the markup as
+written. The wall stops animating, wraps into a static grid, and hides its
+looping duplicates so each crop appears exactly once; the promise row scrolls
+sideways on its own.
 
 ## Asset pipeline
 
