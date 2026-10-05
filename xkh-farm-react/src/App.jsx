@@ -197,10 +197,7 @@ function Footer() {
               height="787"
               className="h-24 w-auto"
             />
-            <p className="disp mt-5 text-lg">
-              Xin Kiar Huat Enterprise{" "}
-              <span className="han font-normal text-sage">新加發企业</span>
-            </p>
+            <p className="disp mt-5 text-lg">XKH Farm</p>
             <p className="mt-2 max-w-xs text-[0.95rem] text-bone/65">
               Growing fresh in Cameron Highlands since 2005.
             </p>
@@ -244,7 +241,7 @@ function Footer() {
         </div>
 
         <p className="mt-12 border-t border-bone/10 pt-6 text-sm text-bone/45">
-          © {new Date().getFullYear()} Xin Kiar Huat Enterprise
+          © {new Date().getFullYear()} XKH Farm
         </p>
       </div>
     </footer>
