@@ -1,3 +1,13 @@
+import { useRef } from "react";
+import {
+  gsap,
+  useGSAP,
+  MOTION,
+  riseWords,
+  riseLines,
+  riseIn,
+} from "../lib/gsap";
+
 const DETAILS = [
   {
     key: "Farm",
@@ -36,53 +46,88 @@ const DETAILS = [
 ];
 
 export default function Contact() {
+  const ref = useRef(null);
+
+  useGSAP(
+    () => {
+      const q = gsap.utils.selector(ref);
+      gsap.matchMedia().add(MOTION, () => {
+        riseWords(q("h1")[0], { trigger: false, delay: 0.1 });
+        riseLines(q("[data-lede]")[0], { trigger: false, delay: 0.35 });
+        riseIn(q("[data-row]"), {
+          trigger: q("dl")[0],
+          delay: 0.5,
+          y: 40,
+          stagger: 0.08,
+        });
+        riseIn(q("[data-cta]"), { trigger: q("[data-cta]")[0], delay: 0.8 });
+        // The map opens out of a rounded window from the middle.
+        gsap.from(q("iframe"), {
+          clipPath: "inset(30% 30% 30% 30% round 60px)",
+          duration: 1.8,
+          ease: "expo.inOut",
+          delay: 0.4,
+          scrollTrigger: { trigger: q("iframe")[0], start: "top 90%" },
+        });
+      });
+    },
+    { scope: ref },
+  );
+
   return (
     <>
-      <section className="wrap pb-14 pt-16 md:pt-24">
-        <h1 className="max-w-[12ch] text-[clamp(3rem,9vw,7rem)]">
-          Come and find us
-        </h1>
-        <p className="mt-6 max-w-xl text-lg text-bone/80">
-          The farm is in Bertam Valley, off the Ringlet – Sungai Koyan road. For
-          volumes and delivery schedules, message us directly.
-        </p>
-      </section>
+      <div ref={ref}>
+        <section className="wrap pb-14 pt-16 md:pt-24">
+          <h1 className="max-w-[12ch] text-[clamp(3rem,9vw,7rem)]">
+            Come and find us
+          </h1>
+          <p data-lede className="mt-6 max-w-xl text-lg text-bone/80">
+            The farm is in Bertam Valley, off the Ringlet – Sungai Koyan road.
+            For volumes and delivery schedules, message us directly.
+          </p>
+        </section>
 
-      <section className="wrap grid gap-12 pb-24 lg:grid-cols-12 lg:gap-16">
-        <div className="lg:col-span-5">
-          <dl className="border-t border-bone/15">
-            {DETAILS.map((d) => (
-              <div key={d.key} className="border-b border-bone/15 py-5">
-                <dt className="text-sm text-sage">{d.key}</dt>
-                <dd className="mt-1.5 text-[1.0625rem] leading-relaxed">
-                  {d.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+        <section className="wrap grid gap-12 pb-24 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-5">
+            <dl className="border-t border-bone/15">
+              {DETAILS.map((d) => (
+                <div
+                  key={d.key}
+                  data-row
+                  className="border-b border-bone/15 py-5"
+                >
+                  <dt className="text-sm text-sage">{d.key}</dt>
+                  <dd className="mt-1.5 text-[1.0625rem] leading-relaxed">
+                    {d.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
 
-          <a
-            href="https://wa.me/60142580200"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="btn btn-sun mt-8 w-full sm:w-auto"
-          >
-            Message us on WhatsApp
-          </a>
-        </div>
+            <a
+              href="https://wa.me/60142580200"
+              target="_blank"
+              rel="noreferrer noopener"
+              data-cta
+              className="btn btn-sun mt-8 w-full sm:w-auto"
+            >
+              Message us on WhatsApp
+            </a>
+          </div>
 
-        <div className="lg:col-span-7">
-          <iframe
-            title="Map showing XKH Farm in Bertam Valley, Pahang"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15934.331613292445!2d101.2981911!3d4.2342956!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cb01e77b1085cf%3A0x436881877a7d26c8!2sXin%20Kiar%20Huat%20Enterprise!5e0!3m2!1sen!2smy!4v1700000000000!5m2!1sen!2smy"
-            className="block h-[440px] w-full bg-night-2 lg:h-[620px]"
-            style={{ border: 0 }}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
-        </div>
-      </section>
+          <div className="lg:col-span-7">
+            <iframe
+              title="Map showing XKH Farm in Bertam Valley, Pahang"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15934.331613292445!2d101.2981911!3d4.2342956!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cb01e77b1085cf%3A0x436881877a7d26c8!2sXin%20Kiar%20Huat%20Enterprise!5e0!3m2!1sen!2smy!4v1700000000000!5m2!1sen!2smy"
+              className="block h-[440px] w-full bg-night-2 lg:h-[620px]"
+              style={{ border: 0 }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      </div>
     </>
   );
 }
