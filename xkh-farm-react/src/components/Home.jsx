@@ -228,26 +228,30 @@ function useReveal() {
  */
 const PLEDGES = [
   {
-    term: "Fresh from the highlands",
-    text: "Cut in Cameron Highlands and packed on the farm, so a crate is on its way to your market the same day.",
+    benefit: "More nutrition on your plate",
+    term: "Picked fresh, so the goodness stays in",
+    text: "Vegetables lose their goodness the longer they wait. Ours are cut in Cameron Highlands and packed the same day, so your family eats them while they are still full of the nutrients that keep you well.",
     img: "/img/farm/field.webp",
     alt: "Rows of lettuce growing in the farm's highland beds.",
   },
   {
+    benefit: "Nothing harmful in your body",
     term: "Grown without chemicals",
-    text: "Nothing goes on the crop that the family would not want on their own table, and that covers every line the farm sells.",
+    text: "No chemical residue ends up on your table, because none goes on the crop. We grow every line the way we would for our own children, so it is safe for yours.",
     img: "/img/farm/harvest.webp",
     alt: "A worker cutting a cabbage by hand in the field.",
   },
   {
-    term: "The same quality in every crate",
-    text: "Thirty-six lines, graded and packed to one specification, so a repeat order arrives looking like the last one.",
+    benefit: "Safe to eat, every single order",
+    term: "Checked crate by crate",
+    text: "All thirty-six lines are graded and checked to one standard before they leave, so every order you serve is as clean and wholesome as the last.",
     img: "/img/farm/crate.webp",
     alt: "Gloved hands lifting cherry tomatoes out of a blue packing crate.",
   },
   {
+    benefit: "Hygienic from field to kitchen",
     term: "Handled clean, start to finish",
-    text: "Washed, sorted and crated under the farm's own hygiene routine before anything is loaded.",
+    text: "Gloved hands at every step, then washed, sorted and crated under the farm's own hygiene routine, so what reaches you is fit for the family table.",
     img: "/img/farm/bundle.webp",
     alt: "A worker bundling spring onions by hand at the edge of the bed.",
   },
@@ -264,25 +268,35 @@ function Commitment() {
           {/* The ref goes on the wrapper, not on the clipped heading — see
               the note in useReveal. */}
           <div ref={headRef} className="lg:col-span-7">
+            {/* The tagline. It is the one line the owner wants a customer to
+                leave with, so it sits in sun above the headline. */}
+            <p
+              data-reveal={headState}
+              className="subhead mb-6 text-lg text-sun md:text-xl"
+            >
+              Keeping your family healthy, one harvest at a time.
+            </p>
             <h2
               id="commitment"
               data-reveal={headState}
-              className="reveal-wipe-x max-w-[14ch] text-[clamp(2.5rem,6vw,5rem)]"
+              style={{ "--reveal-delay": "120ms" }}
+              className="reveal-wipe-x max-w-[15ch] text-[clamp(2.5rem,6vw,5rem)]"
             >
-              Vegetables you can serve without a second thought.
+              Your health is the reason we farm.
             </h2>
           </div>
 
           <p
             ref={leadRef}
             data-reveal={leadState}
-            style={{ "--reveal-delay": "140ms" }}
+            style={{ "--reveal-delay": "260ms" }}
             className="max-w-md self-end text-lg leading-relaxed text-bone/85 lg:col-span-5"
           >
-            Mr Tan started the farm so that families could eat vegetables they
-            never had to worry about: fresh, healthy, grown without chemicals,
-            and held to a premium standard. Two decades on, that is still the
-            only standard the farm packs to.
+            Mr Tan started the farm with one aim: that the people who eat its
+            vegetables stay well. So every crop is grown fresh, without
+            chemicals, handled clean and held to a premium standard. Two
+            decades on, keeping our customers healthy is still the only
+            standard the farm packs to.
           </p>
         </div>
 
@@ -310,7 +324,7 @@ function Commitment() {
   );
 }
 
-function Pledge({ term, text, img, alt, offset }) {
+function Pledge({ benefit, term, text, img, alt, offset }) {
   const [ref, state] = useReveal();
 
   return (
@@ -334,10 +348,21 @@ function Pledge({ term, text, img, alt, offset }) {
         />
       </figure>
 
+      {/* The health benefit leads; the heading says how the farm keeps
+          it. Sentence case: tracked-out caps labels are on DESIGN.md's list
+          of what not to bring back. */}
+      <p
+        data-reveal={state}
+        style={{ "--reveal-delay": offset ? "240ms" : "120ms" }}
+        className="subhead mt-7 text-lg text-sun"
+      >
+        {benefit}
+      </p>
+
       <h3
         data-reveal={state}
         style={{ "--reveal-delay": offset ? "300ms" : "180ms" }}
-        className="disp-lg mt-7 max-w-[20ch] text-[clamp(1.5rem,2.4vw,2.125rem)] leading-[1.05]"
+        className="disp-lg mt-3 max-w-[20ch] text-[clamp(1.5rem,2.4vw,2.125rem)] leading-[1.05]"
       >
         {term}
       </h3>
@@ -345,7 +370,7 @@ function Pledge({ term, text, img, alt, offset }) {
       <p
         data-reveal={state}
         style={{ "--reveal-delay": offset ? "380ms" : "260ms" }}
-        className="mt-4 max-w-[40ch] text-[1.0625rem] leading-relaxed text-bone/85"
+        className="mt-4 max-w-[42ch] text-[1.0625rem] leading-relaxed text-bone/85"
       >
         {text}
       </p>
