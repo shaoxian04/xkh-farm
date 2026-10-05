@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { products, thumbFor } from "../data/products";
+import { useRef } from "react";
+import { gsap, ScrollTrigger, useGSAP, MOTION, riseWords, riseIn } from "../lib/gsap";
 
 /**
  * The crop wall — the page's memorable element.
@@ -20,19 +22,76 @@ const ROWS = [
 ];
 
 export default function CropWall() {
+  const ref = useRef(null);
+
+  useGSAP(
+    () => {
+      const q = gsap.utils.selector(ref);
+      gsap.matchMedia().add(MOTION, () => {
+        riseWords(q("h2")[0]);
+        riseIn(q("[data-cta]"), { delay: 0.3 });
+
+        // Rows travel against each other as the section crosses the screen,
+        // on top of their own marquee — they arrive from opposite sides and
+        // keep sliding apart while you read.
+        const rows = q(".wall-row");
+        rows.forEach((row, i) => {
+          const fromRight = i % 2 === 0;
+          gsap.fromTo(
+            row,
+            { xPercent: fromRight ? 14 : -14 },
+            {
+              xPercent: fromRight ? -5 : 5,
+              ease: "none",
+              scrollTrigger: {
+                trigger: ref.current,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 0.6,
+              },
+            },
+          );
+        });
+
+        // And they lean into a fast scroll, then spring back upright.
+        const lean = { skew: 0 };
+        const setSkew = gsap.quickSetter(rows, "skewX", "deg");
+        const clamp = gsap.utils.clamp(-10, 10);
+        ScrollTrigger.create({
+          trigger: ref.current,
+          start: "top bottom",
+          end: "bottom top",
+          onUpdate(self) {
+            const skew = clamp(self.getVelocity() / -250);
+            if (Math.abs(skew) > Math.abs(lean.skew)) {
+              lean.skew = skew;
+              gsap.to(lean, {
+                skew: 0,
+                duration: 0.9,
+                ease: "power3",
+                overwrite: true,
+                onUpdate: () => setSkew(lean.skew),
+              });
+            }
+          },
+        });
+      });
+    },
+    { scope: ref },
+  );
+
   return (
-    <section className="band overflow-hidden border-y border-bone/10">
+    <section ref={ref} className="band overflow-hidden border-y border-bone/10">
       <div className="wrap">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <h2 className="max-w-3xl text-[clamp(2.5rem,7vw,5.5rem)]">
             Thirty-six vegetables, cut to order and packed the same day.
           </h2>
-          <Link
-            to="/products"
-            className="btn btn-ghost shrink-0 self-start md:self-auto"
-          >
-            See every crop
-          </Link>
+          <div data-cta className="shrink-0 self-start md:self-auto">
+            <Link to="/products" className="btn btn-ghost">
+              See every crop
+            </Link>
+          </div>
         </div>
       </div>
 
