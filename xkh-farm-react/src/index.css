@@ -144,9 +144,9 @@
     padding-inline: 1.75rem;
     font-weight: 600;
     font-variation-settings: "wdth" 95;
-    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+    transition: background-color 180ms ease, color 180ms ease;
   }
-  .btn:active { transform: translateY(1px); }
+  .btn:active { translate: 0 1px; }
 
   .btn-sun { background: var(--color-sun); color: var(--color-night); }
   .btn-sun:hover { background: var(--color-sun-hi); }
@@ -160,6 +160,36 @@
     border-color: var(--color-bone);
   }
 }
+
+/* --- Scroll progress -----------------------------------------------------
+   A hairline of sun along the top edge, driven by the scroll timeline itself
+   so it costs no JS. Browsers without scroll-driven animations simply don't
+   show it. */
+.scroll-progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 60;
+    height: 3px;
+    background: var(--color-sun);
+    transform-origin: 0 50%;
+    animation: progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* --- Smooth scrolling ---------------------------------------------------- */
+/* Lenis owns smooth scrolling while it runs; native smooth scrolling on top
+   of it would fight every wheel tick. */
+html.lenis { scroll-behavior: auto; }
+/* Lenis switches iframes off during smooth scroll; the map must stay usable. */
+html.lenis.lenis-smooth iframe { pointer-events: auto; }
 
 /* --- Scroll-cued reveal --------------------------------------------------
    Used only by the commitments section. The finished state is the default and
@@ -243,4 +273,5 @@
     transform: none !important;
     clip-path: none !important;
   }
+  .scroll-progress { display: none; }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * The page-load moment: the farm's own logo draws itself, then lifts away.
@@ -21,6 +21,22 @@ export default function Intro() {
   });
 
   const videoRef = useRef(null);
+
+  // Page entrances and smooth scrolling are held while the overlay covers
+  // them, otherwise they would finish unseen (see afterIntro in lib/gsap).
+  // Layout effect so the flag is set before the first paint; `intro:done`
+  // fires as soon as the overlay starts to lift.
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    if (state === "playing") {
+      root.dataset.intro = "playing";
+      return;
+    }
+    if (root.dataset.intro) {
+      delete root.dataset.intro;
+      window.dispatchEvent(new Event("intro:done"));
+    }
+  }, [state]);
 
   // The overlay covers the page while it plays, so hold the scroll position.
   useEffect(() => {
