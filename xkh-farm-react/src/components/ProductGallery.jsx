@@ -149,7 +149,7 @@ export default function ProductGallery() {
                 </div>
                 <div className="mt-3.5 flex items-baseline justify-between gap-3">
                   <h2 className="subhead text-lg">{p.name}</h2>
-                  <span className="han text-sm text-sage">{p.han}</span>
+                  <span className="han shrink-0 whitespace-nowrap text-sm text-sage">{p.han}</span>
                 </div>
                 <p className="mt-1.5 text-sm leading-relaxed text-bone/60">
                   {p.note}
@@ -198,6 +198,33 @@ function CropCard({ column, children }) {
           delay: delay + 0.2,
           scrollTrigger,
         });
+      });
+
+      // The photo tilts towards the pointer, like a card picked up off a
+      // table, and settles flat when it leaves. Fine pointers only.
+      gsap.matchMedia().add(`(pointer: fine) and ${MOTION}`, () => {
+        const card = ref.current;
+        const photo = card.querySelector("[data-photo]");
+        gsap.set(photo, { transformPerspective: 800 });
+        const tiltX = gsap.quickTo(photo, "rotationX", { duration: 0.6, ease: "power3.out" });
+        const tiltY = gsap.quickTo(photo, "rotationY", { duration: 0.6, ease: "power3.out" });
+
+        function onMove(e) {
+          const r = photo.getBoundingClientRect();
+          tiltY(((e.clientX - r.left) / r.width - 0.5) * 14);
+          tiltX(((e.clientY - r.top) / r.height - 0.5) * -14);
+        }
+        function onLeave() {
+          tiltX(0);
+          tiltY(0);
+        }
+
+        card.addEventListener("pointermove", onMove);
+        card.addEventListener("pointerleave", onLeave);
+        return () => {
+          card.removeEventListener("pointermove", onMove);
+          card.removeEventListener("pointerleave", onLeave);
+        };
       });
     },
     { scope: ref },

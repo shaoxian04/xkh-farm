@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import CropWall from "./CropWall";
 import {
   gsap,
+  ScrollTrigger,
   SplitText,
   useGSAP,
   MOTION,
@@ -36,6 +37,63 @@ const STATS = [
   // pretending to be another statistic.
   { value: "Cameron Highlands", label: "Pahang", size: "text-xl md:text-2xl" },
 ];
+
+/** XKH, as the owner spells it out: Extra, Keep, Health. */
+const NAME_KEY = [
+  { before: "E", key: "X", after: "tra" },
+  { before: "", key: "K", after: "eep" },
+  { before: "", key: "H", after: "ealth" },
+];
+
+/**
+ * The name's meaning, set as three words rather than a sentence so it reads
+ * as values. Size comes from the caller; the hero and the health section use
+ * it at different scales.
+ */
+function NameKey({ className = "" }) {
+  return (
+    <p className={className} aria-label="XKH stands for Extra, Keep, Health.">
+      <span
+        aria-hidden="true"
+        className="disp flex flex-wrap items-baseline gap-x-[0.4em] uppercase"
+      >
+        {NAME_KEY.map(({ before, key, after }, i) => (
+          <span key={key} className="flex items-baseline gap-x-[0.4em]">
+            {i > 0 && <span data-dot className="text-bone/30">·</span>}
+            <span className="inline-block overflow-hidden pb-[0.1em]">
+              <span data-word className="inline-block text-bone/65">
+                {before}
+                <span data-key className="inline-block text-sun">{key}</span>
+                {after}
+              </span>
+            </span>
+          </span>
+        ))}
+      </span>
+    </p>
+  );
+}
+
+/**
+ * The three words come up out of their masks, then their initials light up
+ * one by one, spelling XKH. Added to `tl` at `at`.
+ */
+function spellName(tl, q, at = 0) {
+  return tl
+    .from(q("[data-word]"), { yPercent: 120, duration: 1.1, ease: EASE, stagger: 0.12 }, at)
+    .from(q("[data-dot]"), { autoAlpha: 0, duration: 0.6, stagger: 0.12 }, at + 0.3)
+    .from(
+      q("[data-key]"),
+      {
+        color: "rgb(245 241 230 / 0.65)",
+        scale: 0.7,
+        duration: 0.7,
+        ease: "back.out(3)",
+        stagger: 0.18,
+      },
+      at + 0.6,
+    );
+}
 
 function Hero() {
   const ref = useRef(null);
@@ -90,7 +148,7 @@ function Hero() {
               },
               0.25,
             )
-            .from(lede.lines, { yPercent: 130, duration: 1.2, stagger: 0.1 }, 0.7)
+            .from(lede.lines, { yPercent: 130, duration: 1.2, stagger: 0.1 }, 0.85)
             .from(
               q("[data-cta] > *"),
               { y: 40, autoAlpha: 0, duration: 1.1, stagger: 0.1 },
@@ -106,6 +164,8 @@ function Hero() {
               { scaleX: 0, transformOrigin: "0% 50%", duration: 1.6 },
               1.0,
             );
+
+          spellName(tl, q, 0.6);
 
           // The figures count up to their value as they land.
           q("[data-count]").forEach((el) => {
@@ -189,7 +249,7 @@ function Hero() {
         className="absolute inset-x-0 top-0 h-52 bg-gradient-to-b from-night/80 to-transparent"
       />
 
-      <div data-hero-inner className="wrap relative pb-16 pt-28 md:pb-24">
+      <div data-hero-inner className="wrap relative pb-12 pt-28 md:pb-16">
         <div data-hero-copy>
           <img
             data-logo
@@ -197,12 +257,13 @@ function Hero() {
             alt=""
             width="644"
             height="787"
-            className="mb-8 h-32 w-auto md:h-44"
+            className="mb-6 h-28 w-auto md:h-36"
           />
 
-          <h1 className="max-w-[16ch] text-[clamp(3rem,10vw,8.5rem)]">
+          <h1 className="max-w-[16ch] text-[clamp(3rem,min(10vw,13svh),8.5rem)]">
             XKH Farm
           </h1>
+          <NameKey className="mt-4 text-[clamp(1.25rem,3.2vw,2.25rem)]" />
 
           <p data-lede className="mt-6 max-w-xl text-lg text-bone/85 md:text-xl">
             Growing fresh vegetables in Cameron Highlands since 2005, and
@@ -224,7 +285,7 @@ function Hero() {
             </Link>
           </div>
 
-          <div data-rule aria-hidden="true" className="mt-14 h-px max-w-3xl bg-bone/15" />
+          <div data-rule aria-hidden="true" className="mt-10 h-px max-w-3xl bg-bone/15 md:mt-12" />
 
           {/* items-end so the labels sit on one line even though the place
               name runs longer than the figures. */}
@@ -400,6 +461,7 @@ const PLEDGES = [
   },
 ];
 
+
 function Commitment() {
   const ref = useRef(null);
 
@@ -409,7 +471,14 @@ function Commitment() {
       const mm = gsap.matchMedia();
 
       mm.add(MOTION, () => {
-        riseLines(q("[data-tagline]")[0]);
+        spellName(
+          gsap.timeline({
+            scrollTrigger: { trigger: q("[data-word]")[0], start: "top 88%" },
+          }),
+          q,
+        );
+
+        riseLines(q("[data-tagline]")[0], { delay: 0.5 });
         riseWords(q("h2")[0], { delay: 0.1 });
         riseLines(q("[data-lead]")[0], { delay: 0.25 });
       });
@@ -489,6 +558,9 @@ function Commitment() {
       <div className="wrap pt-[clamp(5rem,10vw,9rem)]">
         <div className="grid gap-x-16 gap-y-8 lg:grid-cols-12">
           <div className="lg:col-span-7">
+            {/* What the name stands for, in the owner's words. It is set as
+                three words rather than a sentence, so it reads as values. */}
+            <NameKey className="mb-8 text-[clamp(1.5rem,6vw,3rem)]" />
             {/* The tagline. It is the one line the owner wants a customer to
                 leave with, so it sits in sun above the headline. */}
             <p data-tagline className="subhead mb-6 text-lg text-sun md:text-xl">
@@ -729,21 +801,42 @@ function Enquiry() {
         riseLines(q("[data-note]")[0], { delay: 0.25 });
         riseIn(q("[data-cta] > *"), { trigger: q("[data-cta]")[0], delay: 0.35 });
 
-        // The promise, outlined and enormous, slides across under the ask.
-        gsap.fromTo(
-          q("[data-marquee]"),
-          { xPercent: 4 },
-          {
-            xPercent: -30,
-            ease: "none",
-            scrollTrigger: {
-              trigger: ref.current,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true,
-            },
+        // The promise, outlined and enormous, runs across under the ask on
+        // its own loop. Scrolling either way speeds it up and leans the
+        // letters into the scroll; both settle once the page stops.
+        const loop = gsap.to(q("[data-marquee]"), {
+          xPercent: -50,
+          duration: 28,
+          ease: "none",
+          repeat: -1,
+        });
+        const lean = gsap.quickSetter(q("[data-marquee]"), "skewX", "deg");
+        const drive = { speed: 1, slant: 0 };
+        ScrollTrigger.create({
+          trigger: ref.current,
+          start: "top bottom",
+          end: "bottom top",
+          onToggle: (self) => (self.isActive ? loop.play() : loop.pause()),
+          onUpdate(self) {
+            const v = self.getVelocity();
+            const slant = gsap.utils.clamp(-14, 14, v / -150);
+            const speed = gsap.utils.clamp(1, 6, 1 + Math.abs(v) / 400);
+            if (Math.abs(slant) <= Math.abs(drive.slant)) return;
+            drive.slant = slant;
+            drive.speed = speed;
+            gsap.to(drive, {
+              slant: 0,
+              speed: 1,
+              duration: 1,
+              ease: "power3.out",
+              overwrite: true,
+              onUpdate: () => {
+                lean(drive.slant);
+                loop.timeScale(drive.speed);
+              },
+            });
           },
-        );
+        });
       });
     },
     { scope: ref },
@@ -776,13 +869,16 @@ function Enquiry() {
 
       {/* Its own band under the ask, not behind it: laid over the headline
           the words only ever showed as fragments between the letters. */}
-      <p
+      {/* Two identical halves, so the loop can jump back by exactly half
+          its width without a seam. */}
+      <div
         data-marquee
         aria-hidden="true"
-        className="outline-type pointer-events-none mt-16 whitespace-nowrap pb-[0.25em] md:mt-20"
+        className="outline-type pointer-events-none mt-16 flex w-max whitespace-nowrap pb-[0.25em] md:mt-20"
       >
-        Fresh · Healthy · Chemical-free · Fresh · Healthy · Chemical-free
-      </p>
+        <span className="pr-[0.3em]">Fresh · Healthy · Chemical-free ·</span>
+        <span className="pr-[0.3em]">Fresh · Healthy · Chemical-free ·</span>
+      </div>
     </section>
   );
 }
