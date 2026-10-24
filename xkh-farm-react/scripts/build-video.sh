@@ -21,13 +21,11 @@
 #           21.80 cabbage | 23.10 chives | 24.03 greens | 25.83 onions | 27.70
 #           17.40 crate   | 18.40 (cut)  | 18.80
 #
-#     The hero now runs the film WHOLE, at the owner's decision, with those
-#     costs accepted. The history is kept above because it is the argument
-#     against, and because a caption-free re-cut is one edit away if the view
-#     changes. Neither mark can be removed once the film plays whole:
-#     cropping the watermark slices the left edge from two captions (they
-#     start at x=43 and x=53), and delogo leaves a smeared rectangle that
-#     reads worse than the mark does.
+#     The hero ran the film WHOLE for a while, at the owner's decision. It
+#     was reverted on 2026-10-24: the burned-in titles ran straight through
+#     the hero copy, and the 4.6MB file downloaded on every visit. The hero
+#     is now the harvest run alone, watermark cropped and slowed to half
+#     speed (see below). The whole film stays available as film.mp4.
 #       * A STANDING WATERMARK of the logo in the top-left corner, on almost
 #         every frame, roughly x=30..175, y=15..145. Cropping from x=200 is
 #         what removes it, at the cost of 200px of width.
@@ -49,17 +47,15 @@ if [ ! -f "$SRC/xkh-video.mp4" ]; then
   exit 1
 fi
 
-echo "hero background (the whole film, leaner than the click-to-play copy)"
-# Same 35.4s as film.mp4, encoded harder because it downloads on every visit
-# whether or not anyone wants it: crf 32 capped at 1500k gives ~4.6MB against
-# the 7.1MB of film.mp4. Full 1280x720 with no crop - see the note above.
-#
-# The hero's scrim in Home.jsx is tuned to this: the last 7.7s are a cream end
-# card, so the overlay has to hold light text against a LIGHT frame as well as
-# a dark one. If you re-cut this, re-check it against the end card.
-ffmpeg -v error -y -i "$SRC/xkh-video.mp4" -an -vf "scale=1280:720" \
-  -c:v libx264 -crf 32 -preset veryslow \
-  -maxrate 1500k -bufsize 3000k -movflags +faststart -pix_fmt yuv420p \
+echo "hero background (the caption-free harvest run, slowed)"
+# 21.8-27.7s is the longest run with no burned-in titles. It cuts four times
+# in 5.9s, which reads as a flicker behind static copy, so it plays at half
+# speed: an 11.8s loop with a cut every 2-4s. Cropping from x=200 removes the
+# standing watermark. ~1.5MB, against the 4.6MB of the whole film.
+ffmpeg -v error -y -ss 21.8 -to 27.7 -i "$SRC/xkh-video.mp4" -an \
+  -vf "crop=iw-200:ih:200:0,setpts=2*PTS,scale=-2:720" \
+  -c:v libx264 -crf 30 -preset veryslow \
+  -maxrate 1200k -bufsize 2400k -movflags +faststart -pix_fmt yuv420p \
   "$OUT/hero.mp4"
 
 echo "full promo film (their own titles; loaded only on click)"
@@ -90,14 +86,15 @@ still 17.80 crate    # gloved hands lifting cherry tomatoes from a crate
 still 26.60 bundle   # a worker bundling spring onions
 
 echo "posters"
-# 22.4s, not the opening - the film starts on its own logo animation.
-ffmpeg -v error -y -ss 22.4 -i "$OUT/hero.mp4" -vframes 1 -q:v 2 "$OUT/.hero.jpg"
+# The hero's poster is its own first shot, so the frame does not jump when
+# playback starts.
+ffmpeg -v error -y -ss 1.5 -i "$OUT/hero.mp4" -vframes 1 -q:v 2 "$OUT/.hero.jpg"
 ffmpeg -v error -y -i "$OUT/.hero.jpg" -quality 80 "$OUT/hero-poster.webp"
 rm -f "$OUT/.hero.jpg"
 
-# The film keeps its own 16:9 poster. The hero's is 3:2 since the crop, and a
-# 3:2 poster in a 16:9 <video> pillarboxes for the moment before playback.
-ffmpeg -v error -y -ss 22.4 -i "$OUT/film.mp4" -vframes 1 -q:v 2 "$OUT/.film.jpg"
+# The film's poster is the greens being cut at 24.8s: caption-free, and the
+# one harvest shot none of the commitment stills already uses.
+ffmpeg -v error -y -ss 24.8 -i "$OUT/film.mp4" -vframes 1 -q:v 2 "$OUT/.film.jpg"
 ffmpeg -v error -y -i "$OUT/.film.jpg" -quality 80 "$OUT/film-poster.webp"
 rm -f "$OUT/.film.jpg"
 

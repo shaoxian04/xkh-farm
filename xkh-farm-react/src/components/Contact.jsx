@@ -16,6 +16,26 @@ const DETAILS = [
         Jln Ringlet – Sungai Koyan, Bertam Valley,
         <br />
         39200 Ringlet, Pahang, Malaysia
+        {/* By name rather than by coordinates: the embed's centre point is
+            not necessarily the farm gate, and both apps resolve the listing. */}
+        <span className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+          <a
+            href="https://www.google.com/maps/dir/?api=1&destination=Xin%20Kiar%20Huat%20Enterprise%2C%20Bertam%20Valley"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline underline-offset-4 hover:text-sun"
+          >
+            Directions in Google Maps
+          </a>
+          <a
+            href="https://waze.com/ul?q=Xin%20Kiar%20Huat%20Enterprise%20Bertam%20Valley&navigate=yes"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline underline-offset-4 hover:text-sun"
+          >
+            Directions in Waze
+          </a>
+        </span>
       </>
     ),
   },
@@ -81,7 +101,7 @@ export default function Contact() {
           <h1 className="max-w-[12ch] text-[clamp(3rem,9vw,7rem)]">
             Come and find us
           </h1>
-          <p data-lede className="mt-6 max-w-xl text-lg text-bone/80">
+          <p data-lede className="text-lead mt-6 max-w-xl text-bone/80">
             The farm is in Bertam Valley, off the Ringlet – Sungai Koyan road.
             For volumes and delivery schedules, message us directly.
           </p>
@@ -97,7 +117,7 @@ export default function Contact() {
                   className="border-b border-bone/15 py-5"
                 >
                   <dt className="text-sm text-sage">{d.key}</dt>
-                  <dd className="mt-1.5 text-[1.0625rem] leading-relaxed">
+                  <dd className="text-body mt-1.5 leading-relaxed">
                     {d.value}
                   </dd>
                 </div>
