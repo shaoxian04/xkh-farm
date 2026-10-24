@@ -54,11 +54,14 @@ export default function Intro() {
     }
     window.addEventListener("keydown", dismiss);
     window.addEventListener("wheel", dismiss, { passive: true });
+    // A swipe is how a phone scrolls; there is no wheel to listen for.
+    window.addEventListener("touchmove", dismiss, { passive: true });
     // Never strand someone behind the overlay if the video fails to fire.
     const failsafe = setTimeout(dismiss, 5200);
     return () => {
       window.removeEventListener("keydown", dismiss);
       window.removeEventListener("wheel", dismiss);
+      window.removeEventListener("touchmove", dismiss);
       clearTimeout(failsafe);
     };
   }, [state]);
@@ -68,16 +71,22 @@ export default function Intro() {
   return (
     <div
       onClick={() => setState("leaving")}
-      className={`fixed inset-0 z-[100] flex cursor-pointer items-center justify-center bg-[#DCD9CA] transition-opacity duration-[600ms] ease-out ${
+      className={`fixed inset-0 z-[100] flex cursor-pointer items-center justify-center bg-[#E7DCCE] transition-opacity duration-[600ms] ease-out ${
         state === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       onTransitionEnd={() => state === "leaving" && setState("done")}
     >
-      {/* Full-bleed: the clip carries its own paper texture, so any letterbox
-          around it shows as a visible seam against a flat backdrop. */}
+      {/* Sized, not object-cover. The logo spans the middle 34% of the 16:9
+          frame; cover on a portrait phone blows it up past the screen edge
+          and leaves a few arcs. So the clip covers the screen where it can,
+          but never grows past 235vw, which keeps the logo at about 80% of
+          the screen width. On a phone that leaves a band above and below;
+          the mask (portrait only, where the band exists) feathers the clip's
+          paper texture into the backdrop, whose colour is the clip's paper
+          averaged. */}
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute left-1/2 top-1/2 aspect-video w-[min(max(100vw,177.78vh),235vw)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:[mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)]"
         src="/video/intro.mp4"
         autoPlay
         muted
@@ -88,7 +97,7 @@ export default function Intro() {
       <button
         type="button"
         onClick={() => setState("leaving")}
-        className="absolute bottom-10 right-8 text-sm font-medium text-[#0E5A24]/60 underline underline-offset-4 hover:text-[#0E5A24]"
+        className="absolute bottom-10 right-8 text-sm font-medium text-[#0E5A24] underline underline-offset-4 hover:decoration-2"
       >
         Skip
       </button>

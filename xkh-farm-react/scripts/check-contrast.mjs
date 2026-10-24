@@ -65,8 +65,11 @@ const PAIRS = [
   ["soil", "bone-2", 4.5],
   ["soil-2", "bone-2", 4.5],
   ["bone", "forest", 4.5],
+  // The gold enquiry band: headline and copy in night, at full and at 80%.
+  ["night", "sun", 4.5, 0.8],
   // Button fills
   ["night", "sun", 4.5],
+  ["bone", "night-2", 4.5],
   ["night", "sun-hi", 4.5],
 ];
 

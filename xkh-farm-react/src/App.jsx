@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
 import Intro from "./components/Intro";
 import Home from "./components/Home";
@@ -18,7 +18,6 @@ export default function App() {
   const location = useLocation();
 
   useEffect(() => startSmoothScroll(), []);
-  useMagneticButtons();
 
   useEffect(() => {
     resetScroll();
@@ -43,7 +42,6 @@ export default function App() {
   return (
     <>
       <Intro />
-      <PageWipe />
       <div aria-hidden="true" className="scroll-progress" />
       <div className="flex min-h-screen flex-col">
         <a
@@ -67,85 +65,6 @@ export default function App() {
       </div>
     </>
   );
-}
-
-/**
- * Between pages, a panel of forest green with the badge on it lifts off the
- * new page, so a route change reads as turning to the next page rather than
- * a hard cut. The new page is already rendered underneath; the panel is
- * placed over it before the first paint and then drawn up off the top.
- * Not on first load — the intro film covers that.
- */
-function PageWipe() {
-  const ref = useRef(null);
-  const { pathname } = useLocation();
-  const first = useRef(true);
-
-  useLayoutEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    if (!window.matchMedia(MOTION).matches) return;
-
-    const panel = ref.current;
-    const tl = gsap.timeline();
-    tl.set(panel, { autoAlpha: 1, clipPath: "inset(0% 0% 0% 0%)" })
-      .fromTo(
-        panel.firstChild,
-        { scale: 0.85, autoAlpha: 0 },
-        { scale: 1, autoAlpha: 1, duration: 0.35, ease: "power2.out" },
-      )
-      .to(panel.firstChild, { yPercent: -60, autoAlpha: 0, duration: 0.5, ease: "power3.in" }, 0.4)
-      .to(panel, { clipPath: "inset(0% 0% 100% 0%)", duration: 0.9, ease: "expo.inOut" }, 0.45)
-      .set(panel, { autoAlpha: 0 });
-    return () => tl.kill();
-  }, [pathname]);
-
-  return (
-    <div
-      ref={ref}
-      aria-hidden="true"
-      className="pointer-events-none invisible fixed inset-0 z-[55] flex items-center justify-center bg-forest"
-    >
-      <img src="/brand/logo-badge-light.webp" alt="" className="h-28 w-auto" />
-    </div>
-  );
-}
-
-/**
- * Solid buttons lean toward the pointer and spring back when it leaves. Fine
- * pointers only — on touch there is no hover to lean toward.
- */
-function useMagneticButtons() {
-  useEffect(() => {
-    const fine = window.matchMedia(`(pointer: fine) and ${MOTION}`);
-    if (!fine.matches) return;
-
-    function onMove(e) {
-      const btn = e.target.closest?.(".btn");
-      if (!btn) return;
-      const r = btn.getBoundingClientRect();
-      gsap.to(btn, {
-        x: (e.clientX - r.left - r.width / 2) * 0.25,
-        y: (e.clientY - r.top - r.height / 2) * 0.35,
-        duration: 0.5,
-        ease: "power3.out",
-      });
-    }
-    function onOut(e) {
-      const btn = e.target.closest?.(".btn");
-      if (!btn || btn.contains(e.relatedTarget)) return;
-      gsap.to(btn, { x: 0, y: 0, duration: 0.9, ease: "elastic.out(1, 0.4)" });
-    }
-
-    document.addEventListener("pointermove", onMove);
-    document.addEventListener("pointerout", onOut);
-    return () => {
-      document.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerout", onOut);
-    };
-  }, []);
 }
 
 /**
@@ -330,8 +249,7 @@ function Footer() {
             />
             <p className="disp mt-5 text-lg">XKH Farm</p>
             <p className="mt-2 max-w-xs text-[0.95rem] text-bone/65">
-              Extra · Keep · Health. Growing fresh in Cameron Highlands since
-              2005.
+              Growing fresh in Cameron Highlands since 2005.
             </p>
           </div>
 

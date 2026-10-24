@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import CropWall from "./CropWall";
 import {
   gsap,
-  ScrollTrigger,
   SplitText,
   useGSAP,
   MOTION,
@@ -31,7 +30,9 @@ export default function Home() {
 
 const STATS = [
   { value: "2005", label: "Growing since", count: [1985, 2005] },
-  { value: "20 yrs", label: "Farming experience", count: [0, 20], suffix: " yrs" },
+  // "Growing since 2005" already says twenty years; this slot says what a
+  // buyer gets instead.
+  { value: "Same day", label: "Cut and packed", size: "text-xl md:text-2xl" },
   { value: "36", label: "Vegetable lines", count: [0, 36] },
   // A place, not a figure — set smaller so it reads as a name rather than
   // pretending to be another statistic.
@@ -47,12 +48,15 @@ const NAME_KEY = [
 
 /**
  * The name's meaning, set as three words rather than a sentence so it reads
- * as values. Size comes from the caller; the hero and the health section use
- * it at different scales.
+ * as values. It opens the hero, above the name itself, at the owner's request
+ * (2026-10-24), and appears nowhere else so it is not said twice.
  */
 function NameKey({ className = "" }) {
   return (
-    <p className={className} aria-label="XKH stands for Extra, Keep, Health.">
+    <p className={className}>
+      {/* aria-label on a <p> is ignored by most screen readers (it has no
+          role that takes a name), so the spoken version is real text. */}
+      <span className="sr-only">XKH stands for Extra, Keep, Health.</span>
       <span
         aria-hidden="true"
         className="disp flex flex-wrap items-baseline gap-x-[0.4em] uppercase"
@@ -127,27 +131,20 @@ function Hero() {
           });
 
           const tl = gsap.timeline({ defaults: { ease: EASE } });
-          tl.from(q("[data-logo]"), {
-            autoAlpha: 0,
-            scale: 0.6,
-            rotate: -8,
-            filter: "blur(14px)",
-            duration: 1.6,
-          })
-            // Each letter flips up off its baseline, like a card turning.
-            .from(
-              split.chars,
-              {
-                yPercent: 90,
-                rotateX: -95,
-                autoAlpha: 0,
-                transformPerspective: 700,
-                transformOrigin: "50% 100%",
-                duration: 1.4,
-                stagger: 0.06,
-              },
-              0.25,
-            )
+          // Each letter flips up off its baseline, like a card turning.
+          tl.from(
+            split.chars,
+            {
+              yPercent: 90,
+              rotateX: -95,
+              autoAlpha: 0,
+              transformPerspective: 700,
+              transformOrigin: "50% 100%",
+              duration: 1.4,
+              stagger: 0.06,
+            },
+            0.35,
+          )
             .from(lede.lines, { yPercent: 130, duration: 1.2, stagger: 0.1 }, 0.85)
             .from(
               q("[data-cta] > *"),
@@ -165,7 +162,8 @@ function Hero() {
               1.0,
             );
 
-          spellName(tl, q, 0.6);
+          // The name's meaning comes up first, then the name lands under it.
+          spellName(tl, q, 0);
 
           // The figures count up to their value as they land.
           q("[data-count]").forEach((el) => {
@@ -216,19 +214,14 @@ function Hero() {
       ref={ref}
       className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden"
     >
-      {/* The farm's whole film, uncut, at the owner's request.
-          Two consequences worth knowing before editing this.
+      {/* The caption-free harvest run of the farm's film, slowed to half
+          speed; see scripts/build-video.sh. The whole film, with its titles,
+          is in the Film section further down.
 
-          Its burned-in titles cross the copy below, and the last 7.7s are a
-          cream end card that takes the whole frame pale, so the scrim has to
-          hold text against a LIGHT background as well as a dark one — hence
-          to-night/45 rather than /35, and the separate top scrim that keeps
-          the nav legible while the header is still transparent. Verified by
-          sampling rendered pixels over the end card, not by eye.
-
-          The corner watermark stays. Cropping it off would slice the left
-          edge from two of the captions, which start at x=43 and x=53, and
-          delogo leaves a smeared rectangle that is worse than the mark. */}
+          The scrim was tuned when this was the whole film, whose last 7.7s
+          are a cream end card, so it holds light text against a light frame
+          with room to spare. The top scrim keeps the nav legible while the
+          header is still transparent. */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/video/hero.mp4"
@@ -251,21 +244,11 @@ function Hero() {
 
       <div data-hero-inner className="wrap relative pb-12 pt-28 md:pb-16">
         <div data-hero-copy>
-          <img
-            data-logo
-            src="/brand/logo-lockup-light.webp"
-            alt=""
-            width="644"
-            height="787"
-            className="mb-6 h-28 w-auto md:h-36"
-          />
-
+          <NameKey className="mb-5 text-[clamp(1.25rem,3.2vw,2.25rem)]" />
           <h1 className="max-w-[16ch] text-[clamp(3rem,min(10vw,13svh),8.5rem)]">
             XKH Farm
           </h1>
-          <NameKey className="mt-4 text-[clamp(1.25rem,3.2vw,2.25rem)]" />
-
-          <p data-lede className="mt-6 max-w-xl text-lg text-bone/85 md:text-xl">
+          <p data-lede className="text-lead mt-6 max-w-xl text-bone/85">
             Growing fresh vegetables in Cameron Highlands since 2005, and
             supplying them wholesale to markets, distributors and retailers
             across Malaysia.
@@ -358,21 +341,28 @@ function Story() {
   );
 
   return (
-    <section ref={ref} className="band bg-bone-2 text-soil">
-      <div className="wrap grid gap-12 lg:grid-cols-12 lg:gap-16">
-        <div className="lg:col-span-7">
-          <h2 className="max-w-[18ch] text-[clamp(2.25rem,5.5vw,4.25rem)]">
+    <section ref={ref} className="bg-bone-2 text-soil">
+      <div className="wrap band grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center lg:gap-16 xl:gap-24">
+        {/* Two columns held inside the page's content edges, so the photo's
+            right edge lines up with the header and the copy's left edge with
+            everything else. The photo keeps its own 4:3, centred against the
+            copy. Filling the whole half top to bottom was too much photo, and
+            running it off the right edge read as a mistake. */}
+        <div>
+          <h2 className="max-w-[18ch] text-[clamp(2.25rem,5.5vw,4.75rem)]">
             A family farm that grew into a supplier.
           </h2>
 
-          <div className="mt-8 max-w-2xl space-y-5 text-[1.0625rem] leading-relaxed text-soil-2">
-            <p data-para>
+          <div className="mt-8 max-w-[60ch] space-y-6 leading-relaxed">
+            {/* The first paragraph is the lead: larger and in full soil, so the
+                step from headline to copy is not one sudden drop. */}
+            <p data-para className="text-lead text-soil">
               Xin Kiar Huat Enterprise was founded by Mr Tan and built on years
               of hands-on experience, perseverance and a firm commitment to
               quality farming. It started small, growing fresh vegetables for
               local communities.
             </p>
-            <p data-para>
+            <p data-para className="text-body text-soil-2">
               Two decades on, the farm supplies wholesale buyers across the
               country from the same ground in Bertam Valley. The scale changed;
               the standards that got it there did not.
@@ -389,24 +379,22 @@ function Story() {
           </div>
         </div>
 
-        <div className="lg:col-span-5">
-          {/* The source is 4:3 landscape; a portrait crop would throw away most
-              of the field, which is the subject of the photograph. */}
-          <figure
-            data-frame
-            className="relative m-0 aspect-[5/4] overflow-hidden bg-soil/10 lg:sticky lg:top-28"
-          >
-            <img
-              src="/img/webp/intro.webp"
-              alt="Rows of young vegetables growing under cover at the farm in Bertam Valley."
-              loading="lazy"
-              decoding="async"
-              width="720"
-              height="540"
-              className="overscan"
-            />
-          </figure>
-        </div>
+        {/* The source is 4:3 landscape and keeps that shape at every size, so
+            the field is never cropped to a strip. */}
+        <figure
+          data-frame
+          className="relative m-0 aspect-[4/3] overflow-hidden bg-soil/10"
+        >
+          <img
+            src="/img/webp/intro.webp"
+            alt="Rows of young vegetables growing under cover at the farm in Bertam Valley."
+            loading="lazy"
+            decoding="async"
+            width="1440"
+            height="1080"
+            className="overscan"
+          />
+        </figure>
       </div>
     </section>
   );
@@ -471,14 +459,7 @@ function Commitment() {
       const mm = gsap.matchMedia();
 
       mm.add(MOTION, () => {
-        spellName(
-          gsap.timeline({
-            scrollTrigger: { trigger: q("[data-word]")[0], start: "top 88%" },
-          }),
-          q,
-        );
-
-        riseLines(q("[data-tagline]")[0], { delay: 0.5 });
+        riseLines(q("[data-tagline]")[0], { delay: 0.2 });
         riseWords(q("h2")[0], { delay: 0.1 });
         riseLines(q("[data-lead]")[0], { delay: 0.25 });
       });
@@ -558,9 +539,6 @@ function Commitment() {
       <div className="wrap pt-[clamp(5rem,10vw,9rem)]">
         <div className="grid gap-x-16 gap-y-8 lg:grid-cols-12">
           <div className="lg:col-span-7">
-            {/* What the name stands for, in the owner's words. It is set as
-                three words rather than a sentence, so it reads as values. */}
-            <NameKey className="mb-8 text-[clamp(1.5rem,6vw,3rem)]" />
             {/* The tagline. It is the one line the owner wants a customer to
                 leave with, so it sits in sun above the headline. */}
             <p data-tagline className="subhead mb-6 text-lg text-sun md:text-xl">
@@ -576,7 +554,7 @@ function Commitment() {
 
           <p
             data-lead
-            className="max-w-md self-end text-lg leading-relaxed text-bone/85 lg:col-span-5"
+            className="text-lead max-w-md self-end leading-relaxed text-bone/85 lg:col-span-5"
           >
             Mr Tan started the farm with one aim: that the people who eat its
             vegetables stay well. So every crop is grown fresh, without
@@ -654,7 +632,7 @@ function Pledge({ benefit, term, text, img, alt }) {
           {term}
         </h3>
 
-        <p className="mt-4 max-w-[42ch] text-[1.0625rem] leading-relaxed text-bone/85">
+        <p className="text-body mt-4 max-w-[42ch] leading-relaxed text-bone/85">
           {text}
         </p>
       </div>
@@ -800,84 +778,40 @@ function Enquiry() {
         riseWords(q("h2")[0]);
         riseLines(q("[data-note]")[0], { delay: 0.25 });
         riseIn(q("[data-cta] > *"), { trigger: q("[data-cta]")[0], delay: 0.35 });
-
-        // The promise, outlined and enormous, runs across under the ask on
-        // its own loop. Scrolling either way speeds it up and leans the
-        // letters into the scroll; both settle once the page stops.
-        const loop = gsap.to(q("[data-marquee]"), {
-          xPercent: -50,
-          duration: 28,
-          ease: "none",
-          repeat: -1,
-        });
-        const lean = gsap.quickSetter(q("[data-marquee]"), "skewX", "deg");
-        const drive = { speed: 1, slant: 0 };
-        ScrollTrigger.create({
-          trigger: ref.current,
-          start: "top bottom",
-          end: "bottom top",
-          onToggle: (self) => (self.isActive ? loop.play() : loop.pause()),
-          onUpdate(self) {
-            const v = self.getVelocity();
-            const slant = gsap.utils.clamp(-14, 14, v / -150);
-            const speed = gsap.utils.clamp(1, 6, 1 + Math.abs(v) / 400);
-            if (Math.abs(slant) <= Math.abs(drive.slant)) return;
-            drive.slant = slant;
-            drive.speed = speed;
-            gsap.to(drive, {
-              slant: 0,
-              speed: 1,
-              duration: 1,
-              ease: "power3.out",
-              overwrite: true,
-              onUpdate: () => {
-                lean(drive.slant);
-                loop.timeScale(drive.speed);
-              },
-            });
-          },
-        });
       });
     },
     { scope: ref },
   );
 
   return (
-    <section ref={ref} className="band relative overflow-hidden bg-forest pb-0">
-      <div className="wrap relative">
-        <h2 className="max-w-[16ch] text-[clamp(2.5rem,7vw,6rem)]">
+    // Gold, the one band on the page in sun: it is the last thing a buyer
+    // sees before the footer, and as forest it repeated the commitments
+    // band two sections earlier. Night on sun is 8.6:1; gold buttons would
+    // vanish here, so the buttons switch to night.
+    <section ref={ref} className="on-sun band bg-sun text-night">
+      <div className="wrap grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-16">
+        <h2 className="max-w-[13ch] text-[clamp(2.75rem,8vw,8rem)] lg:col-span-7">
           Tell us what you need, and how often.
         </h2>
-        <p data-note className="mt-6 max-w-xl text-lg text-bone/85">
-          Volumes, crop lines and delivery schedules are arranged directly with
-          the farm. A message is the quickest way to start.
-        </p>
-        <div data-cta className="mt-10 flex flex-wrap gap-3">
-          <a
-            href="https://wa.me/60142580200"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="btn btn-sun"
-          >
-            Message us on WhatsApp
-          </a>
-          <a href="tel:+60142580200" className="btn btn-ghost">
-            +60 14-258 0200
-          </a>
+        <div className="lg:col-span-5 lg:pb-3">
+          <p data-note className="text-lead max-w-[42ch] leading-relaxed text-night/80">
+            Volumes, crop lines and delivery schedules are arranged directly with
+            the farm. A message is the quickest way to start.
+          </p>
+          <div data-cta className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="https://wa.me/60142580200"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="btn btn-night"
+            >
+              Message us on WhatsApp
+            </a>
+            <a href="tel:+60142580200" className="btn btn-ghost-night">
+              +60 14-258 0200
+            </a>
+          </div>
         </div>
-      </div>
-
-      {/* Its own band under the ask, not behind it: laid over the headline
-          the words only ever showed as fragments between the letters. */}
-      {/* Two identical halves, so the loop can jump back by exactly half
-          its width without a seam. */}
-      <div
-        data-marquee
-        aria-hidden="true"
-        className="outline-type pointer-events-none mt-16 flex w-max whitespace-nowrap pb-[0.25em] md:mt-20"
-      >
-        <span className="pr-[0.3em]">Fresh · Healthy · Chemical-free ·</span>
-        <span className="pr-[0.3em]">Fresh · Healthy · Chemical-free ·</span>
       </div>
     </section>
   );

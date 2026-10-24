@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useId } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useId } from "react";
 import {
   products,
   CATEGORIES,
@@ -14,10 +14,55 @@ import {
   riseIn,
 } from "../lib/gsap";
 
+const WHATSAPP = "60142580200";
+const LIST_KEY = "xkh-enquiry";
+
+/**
+ * The buyer's enquiry: slugs of the crops they have added. Kept for the
+ * session so it survives a trip to the contact page and back. Storage can be
+ * unavailable (private windows, blocked site data), in which case the list
+ * simply lasts as long as the page.
+ */
+function useEnquiry() {
+  const [list, setList] = useState(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(LIST_KEY) ?? "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(LIST_KEY, JSON.stringify(list));
+    } catch {
+      /* storage blocked; the list still works for this page */
+    }
+  }, [list]);
+
+  const toggle = (slug) =>
+    setList((l) => (l.includes(slug) ? l.filter((s) => s !== slug) : [...l, slug]));
+  return { list, toggle, clear: () => setList([]) };
+}
+
+/** The message the buyer sends, written so the farm can reply with prices. */
+function enquiryLink(crops) {
+  const lines = crops.map((p) => `- ${p.name} (${p.han})`).join("\n");
+  const text =
+    "Hello XKH Farm, I would like price and availability for:\n" +
+    `${lines}\n\n` +
+    "Quantity and how often: \n" +
+    "Deliver to: ";
+  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
+}
+
 export default function ProductGallery() {
   const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const searchId = useId();
+  const enquiry = useEnquiry();
+  const chosen = products.filter((p) => enquiry.list.includes(p.slug));
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -55,9 +100,10 @@ export default function ProductGallery() {
           <h1 className="max-w-[14ch] text-[clamp(3rem,9vw,7rem)]">
             Everything we grow
           </h1>
-          <p className="mt-6 max-w-xl text-lg text-bone/80">
-            Thirty-six lines from Bertam Valley. What is cutting each week
-            shifts with the season, so ask us for current availability.
+          <p className="text-lead mt-6 max-w-xl text-bone/80">
+            Thirty-six lines from Bertam Valley. Add the ones you need to an
+            enquiry and send it on WhatsApp; we reply with this week's prices
+            and availability.
           </p>
         </section>
 
@@ -151,15 +197,113 @@ export default function ProductGallery() {
                   <h2 className="subhead text-lg">{p.name}</h2>
                   <span className="han shrink-0 whitespace-nowrap text-sm text-sage">{p.han}</span>
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-bone/60">
+                {/* pb-4 holds the gap above the button; mt-auto on the button
+                    pins it to the card's foot so a row's buttons line up
+                    however long each note runs. */}
+                <p className="mt-1.5 pb-4 text-sm leading-relaxed text-bone/60">
                   {p.note}
                 </p>
+                <AddButton
+                  added={enquiry.list.includes(p.slug)}
+                  onClick={() => enquiry.toggle(p.slug)}
+                  name={p.name}
+                />
               </CropCard>
             ))}
           </ul>
         )}
       </section>
+
+      <EnquiryBar crops={chosen} onClear={enquiry.clear} />
     </>
+  );
+}
+
+function AddButton({ added, onClick, name }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={added}
+      aria-label={added ? `Remove ${name} from enquiry` : `Add ${name} to enquiry`}
+      className={`mt-auto inline-flex h-11 w-full items-center justify-center px-3 text-[0.95rem] font-semibold transition-colors ${
+        added
+          ? "bg-sun text-night hover:bg-sun-hi"
+          : "border border-bone/30 text-bone hover:border-bone hover:bg-bone/10"
+      }`}
+      style={{ fontVariationSettings: '"wdth" 95' }}
+    >
+      {added ? "Added to enquiry" : "Add to enquiry"}
+    </button>
+  );
+}
+
+/**
+ * Rises from the foot of the screen once the first crop is added, so the
+ * buyer sees where their choices went, and leaves when the list is empty.
+ */
+function EnquiryBar({ crops, onClear }) {
+  const open = crops.length > 0;
+  const names = crops.map((p) => p.name).join(", ");
+  const ref = useRef(null);
+
+  // While open, the bar is fixed over the foot of the page, so the page
+  // reserves its height at the very bottom (after the footer, which a
+  // spacer inside this page could not reach) or it would cover the
+  // copyright line. Measured, because the bar wraps to two rows on a phone.
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    if (!open) {
+      root.style.removeProperty("--enquiry-bar");
+      return;
+    }
+    const bar = ref.current;
+    const sync = () => root.style.setProperty("--enquiry-bar", `${bar.offsetHeight}px`);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(bar);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--enquiry-bar");
+    };
+  }, [open]);
+
+  return (
+    <div
+      ref={ref}
+      role="region"
+      aria-label="Your enquiry"
+      inert={!open}
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-bone/15 bg-night-2 transition-transform duration-500 ease-out ${
+        open ? "translate-y-0" : "translate-y-full"
+      }`}
+    >
+      <div className="wrap flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+        <p aria-live="polite" className="min-w-0">
+          <span className="font-semibold">
+            {crops.length} {crops.length === 1 ? "crop" : "crops"} in your enquiry
+          </span>
+          <span className="block truncate text-sm text-sage">{names}</span>
+        </p>
+        <div className="flex shrink-0 gap-3">
+          <button
+            type="button"
+            onClick={onClear}
+            className="btn btn-ghost !min-h-11 !px-4 text-[0.95rem]"
+          >
+            Clear
+          </button>
+          <a
+            href={open ? enquiryLink(crops) : undefined}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="btn btn-sun !min-h-11 flex-1 !px-5 text-[0.95rem] sm:flex-none"
+          >
+            Send on WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -199,39 +343,12 @@ function CropCard({ column, children }) {
           scrollTrigger,
         });
       });
-
-      // The photo tilts towards the pointer, like a card picked up off a
-      // table, and settles flat when it leaves. Fine pointers only.
-      gsap.matchMedia().add(`(pointer: fine) and ${MOTION}`, () => {
-        const card = ref.current;
-        const photo = card.querySelector("[data-photo]");
-        gsap.set(photo, { transformPerspective: 800 });
-        const tiltX = gsap.quickTo(photo, "rotationX", { duration: 0.6, ease: "power3.out" });
-        const tiltY = gsap.quickTo(photo, "rotationY", { duration: 0.6, ease: "power3.out" });
-
-        function onMove(e) {
-          const r = photo.getBoundingClientRect();
-          tiltY(((e.clientX - r.left) / r.width - 0.5) * 14);
-          tiltX(((e.clientY - r.top) / r.height - 0.5) * -14);
-        }
-        function onLeave() {
-          tiltX(0);
-          tiltY(0);
-        }
-
-        card.addEventListener("pointermove", onMove);
-        card.addEventListener("pointerleave", onLeave);
-        return () => {
-          card.removeEventListener("pointermove", onMove);
-          card.removeEventListener("pointerleave", onLeave);
-        };
-      });
     },
     { scope: ref },
   );
 
   return (
-    <li ref={ref} className="group">
+    <li ref={ref} className="group flex flex-col">
       {children}
     </li>
   );
